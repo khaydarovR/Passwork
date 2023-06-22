@@ -1,8 +1,8 @@
 ﻿namespace Passwork.Server.Domain.Entity;
 
-public class PasswordChange: BaseEntity
+public class ActivityLog: BaseEntity
 {
-    public DateTime ChangedAt { get; set; }
+    public DateTime At { get; set; }
     public string Title { get; set; }
     public Guid PasswordId { get; set; }
     public Password Password { get; set; }

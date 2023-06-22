@@ -152,6 +152,39 @@ namespace Passwork.Server.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Passwork.Server.Domain.Entity.ActivityLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppUsreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("At")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValue(new DateTime(2023, 6, 22, 19, 39, 24, 185, DateTimeKind.Utc).AddTicks(5163));
+
+                    b.Property<Guid>("PasswordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUsreId");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("PasswordId");
+
+                    b.ToTable("ActivityLog");
+                });
+
             modelBuilder.Entity("Passwork.Server.Domain.Entity.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -245,32 +278,16 @@ namespace Passwork.Server.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("Passwork.Server.Domain.Entity.CompanyUsers", b =>
-                {
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AppUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Right")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CompanyId", "AppUserId");
-
-                    b.HasIndex("AppUserId");
-
-                    b.ToTable("CompanyUsers");
-                });
-
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Password", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Login")
                         .IsRequired()
@@ -290,10 +307,9 @@ namespace Passwork.Server.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("isDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
+                    b.Property<string>("UseInUtl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -303,39 +319,6 @@ namespace Passwork.Server.Migrations
                     b.HasIndex("SafeId");
 
                     b.ToTable("Passwords");
-                });
-
-            modelBuilder.Entity("Passwork.Server.Domain.Entity.PasswordChange", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AppUsreId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ChangedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 6, 22, 13, 33, 28, 231, DateTimeKind.Utc).AddTicks(1173));
-
-                    b.Property<Guid>("PasswordId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppUsreId");
-
-                    b.HasIndex("Id")
-                        .IsUnique();
-
-                    b.HasIndex("PasswordId");
-
-                    b.ToTable("PasswordChange");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.PasswordTags", b =>
@@ -381,6 +364,27 @@ namespace Passwork.Server.Migrations
                         .IsUnique();
 
                     b.ToTable("Safes");
+                });
+
+            modelBuilder.Entity("Passwork.Server.Domain.Entity.SafeUsers", b =>
+                {
+                    b.Property<Guid>("SafeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Right")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SafeId", "AppUserId");
+
+                    b.HasIndex("AppUserId");
+
+                    b.ToTable("SafeUsers");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Tag", b =>
@@ -452,23 +456,23 @@ namespace Passwork.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Passwork.Server.Domain.Entity.CompanyUsers", b =>
+            modelBuilder.Entity("Passwork.Server.Domain.Entity.ActivityLog", b =>
                 {
                     b.HasOne("Passwork.Server.Domain.Entity.AppUser", "AppUser")
-                        .WithMany("CompanyUsers")
-                        .HasForeignKey("AppUserId")
+                        .WithMany("ChangerHistory")
+                        .HasForeignKey("AppUsreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Passwork.Server.Domain.Entity.Company", "Company")
-                        .WithMany("CompanyUsers")
-                        .HasForeignKey("CompanyId")
+                    b.HasOne("Passwork.Server.Domain.Entity.Password", "Password")
+                        .WithMany("ActivityLog")
+                        .HasForeignKey("PasswordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AppUser");
 
-                    b.Navigation("Company");
+                    b.Navigation("Password");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Password", b =>
@@ -480,25 +484,6 @@ namespace Passwork.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Safe");
-                });
-
-            modelBuilder.Entity("Passwork.Server.Domain.Entity.PasswordChange", b =>
-                {
-                    b.HasOne("Passwork.Server.Domain.Entity.AppUser", "AppUser")
-                        .WithMany("ChangerHistory")
-                        .HasForeignKey("AppUsreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Passwork.Server.Domain.Entity.Password", "Password")
-                        .WithMany("ChangesHistory")
-                        .HasForeignKey("PasswordId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AppUser");
-
-                    b.Navigation("Password");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.PasswordTags", b =>
@@ -531,23 +516,40 @@ namespace Passwork.Server.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("Passwork.Server.Domain.Entity.SafeUsers", b =>
+                {
+                    b.HasOne("Passwork.Server.Domain.Entity.AppUser", "AppUser")
+                        .WithMany("SafeUsers")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Passwork.Server.Domain.Entity.Safe", "Safe")
+                        .WithMany("SafeUsers")
+                        .HasForeignKey("SafeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+
+                    b.Navigation("Safe");
+                });
+
             modelBuilder.Entity("Passwork.Server.Domain.Entity.AppUser", b =>
                 {
                     b.Navigation("ChangerHistory");
 
-                    b.Navigation("CompanyUsers");
+                    b.Navigation("SafeUsers");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Company", b =>
                 {
-                    b.Navigation("CompanyUsers");
-
                     b.Navigation("Safes");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Password", b =>
                 {
-                    b.Navigation("ChangesHistory");
+                    b.Navigation("ActivityLog");
 
                     b.Navigation("PasswordTags");
                 });
@@ -555,6 +557,8 @@ namespace Passwork.Server.Migrations
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Safe", b =>
                 {
                     b.Navigation("Passwords");
+
+                    b.Navigation("SafeUsers");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Tag", b =>

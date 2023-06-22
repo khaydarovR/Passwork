@@ -9,6 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Passwork.Client", "Passwork
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Passwork.Shared", "Passwork\Shared\Passwork.Shared.csproj", "{D1017CB0-5459-4237-8C02-A006BB7CFCA7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2070F9E9-C0D7-4699-B9A7-FC39B8C0BBE5}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Downloads\pascom.drawio.png = ..\..\..\Downloads\pascom.drawio.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

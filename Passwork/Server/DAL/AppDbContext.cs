@@ -39,9 +39,9 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         companyBuilder.HasIndex(c => c.Id).IsUnique();
         companyBuilder.Property(c => c.Name).IsRequired();
 
-        modelBuilder.Entity<CompanyUsers>()
-            .HasKey(sc => new { sc.CompanyId, sc.AppUserId });
-        modelBuilder.Entity<CompanyUsers>()
+        modelBuilder.Entity<SafeUsers>()
+            .HasKey(sc => new { sc.SafeId, sc.AppUserId });
+        modelBuilder.Entity<SafeUsers>()
             .Property(c => c.Right).IsRequired();
 
         var safeBuilder = modelBuilder.Entity<Safe>();
@@ -60,7 +60,7 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         passwordBuilder.Property(c => c.Login).IsRequired();
         passwordBuilder.Property(c => c.Pw).IsRequired();
         passwordBuilder.Property(c => c.Note).IsRequired(false);
-        passwordBuilder.Property(c => c.isDeleted).HasDefaultValue(false);
+        passwordBuilder.Property(c => c.IsDeleted).HasDefaultValue(false);
         passwordBuilder.HasOne(c => c.Safe)
             .WithMany(s => s.Passwords)
             .HasForeignKey(c => c.SafeId)
@@ -74,13 +74,13 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         modelBuilder.Entity<PasswordTags>()
             .HasKey(sc => new { sc.PasswordId, sc.TagId});
 
-        var changesBuilder = modelBuilder.Entity<PasswordChange>();
+        var changesBuilder = modelBuilder.Entity<ActivityLog>();
         changesBuilder.HasKey(c => c.Id);
         changesBuilder.HasIndex(c => c.Id).IsUnique();
         changesBuilder.Property(c => c.Title).IsRequired();
-        changesBuilder.Property(c => c.ChangedAt).HasDefaultValue(DateTime.UtcNow);
+        changesBuilder.Property(c => c.At).HasDefaultValue(DateTime.UtcNow);
         changesBuilder.HasOne(c => c.Password)
-            .WithMany(s => s.ChangesHistory)
+            .WithMany(s => s.ActivityLog)
             .HasForeignKey(c => c.PasswordId)
             .OnDelete(DeleteBehavior.Cascade);
         changesBuilder.HasOne(c => c.AppUser)
