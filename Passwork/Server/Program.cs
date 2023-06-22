@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using Passwork.Server.Application;
+using Passwork.Server.Application.Interfaces;
+using Passwork.Server.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
 builder.Services.AddMy(builder.Configuration);
 
 var app = builder.Build();
@@ -34,5 +35,11 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+
+app.Services
+        .CreateScope()
+        .ServiceProvider
+        .GetService<ISeedingService>()!
+        .DbInit(true);
 
 app.Run();
