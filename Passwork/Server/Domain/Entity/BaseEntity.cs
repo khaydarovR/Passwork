@@ -1,4 +1,4 @@
-﻿namespace Passwork.Server.Entity;
+﻿namespace Passwork.Server.Domain.Entity;
 
 public class BaseEntity
 {
