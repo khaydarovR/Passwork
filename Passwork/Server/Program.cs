@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using Passwork.Server.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.
+builder.Services.AddMy(builder.Configuration);
 
 var app = builder.Build();
 

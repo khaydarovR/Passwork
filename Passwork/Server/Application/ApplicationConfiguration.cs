@@ -5,7 +5,7 @@ namespace Passwork.Server.Application;
 
 public static class ApplicationConfiguration
 {
-    public static IServiceCollection AddApplicationServises(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddMy(this IServiceCollection services, IConfiguration config)
     {
         services.AddDbContext<AppDbContext>(opt =>
         {

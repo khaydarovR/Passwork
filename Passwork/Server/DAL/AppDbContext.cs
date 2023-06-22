@@ -60,6 +60,7 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         passwordBuilder.Property(c => c.Login).IsRequired();
         passwordBuilder.Property(c => c.Pw).IsRequired();
         passwordBuilder.Property(c => c.Note).IsRequired(false);
+        passwordBuilder.Property(c => c.isDeleted).HasDefaultValue(false);
         passwordBuilder.HasOne(c => c.Safe)
             .WithMany(s => s.Passwords)
             .HasForeignKey(c => c.SafeId)
@@ -73,5 +74,18 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         modelBuilder.Entity<PasswordTags>()
             .HasKey(sc => new { sc.PasswordId, sc.TagId});
 
+        var changesBuilder = modelBuilder.Entity<PasswordChange>();
+        changesBuilder.HasKey(c => c.Id);
+        changesBuilder.HasIndex(c => c.Id).IsUnique();
+        changesBuilder.Property(c => c.Title).IsRequired();
+        changesBuilder.Property(c => c.ChangedAt).HasDefaultValue(DateTime.UtcNow);
+        changesBuilder.HasOne(c => c.Password)
+            .WithMany(s => s.ChangesHistory)
+            .HasForeignKey(c => c.PasswordId)
+            .OnDelete(DeleteBehavior.Cascade);
+        changesBuilder.HasOne(c => c.AppUser)
+            .WithMany(s => s.ChangerHistory)
+            .HasForeignKey(c => c.AppUsreId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

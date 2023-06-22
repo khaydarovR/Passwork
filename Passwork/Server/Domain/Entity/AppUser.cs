@@ -7,4 +7,5 @@ public class AppUser : IdentityUser<Guid>
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public string MasterPassword { get; set; } = null!;
     public IList<CompanyUsers> CompanyUsers { get; set; }
+    public ICollection<PasswordChange> ChangerHistory { get; set; }
 }
