@@ -18,7 +18,10 @@ public static class ApplicationConfiguration
             opt.UseNpgsql(config.GetConnectionString("PostgreDb"));
         });
 
-        services.AddIdentity<AppUser, IdentityRole<Guid>>()
+        services.AddIdentity<AppUser, IdentityRole<Guid>>(options => {
+            options.SignIn.RequireConfirmedAccount = true;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+            })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager<SignInManager<AppUser>>()
             .AddUserManager<UserManager<AppUser>>()

@@ -10,49 +10,81 @@ namespace Passwork.Server.Application.Services;
 
 public class SeedingService : ISeedingService
 {
-    private readonly AppDbContext dbContext;
-    private readonly ILogger logger;
-    private readonly UserManager<AppUser> userManager;
+    private readonly AppDbContext _dbContext;
+    private readonly ILogger _logger;
+    private readonly UserManager<AppUser> _userManager;
 
     public SeedingService(AppDbContext dbContext, ILogger<SeedingService> logger, UserManager<AppUser> userManager)
     {
-        this.dbContext = dbContext;
-        this.logger = logger;
-        this.userManager = userManager;
+        this._dbContext = dbContext;
+        this._logger = logger;
+        this._userManager = userManager;
     }
     public void DbInit(bool isSeed)
     {
         if (!isSeed)
         {
-            logger.LogWarning("Seeding disabled");
+            _logger.LogWarning("Seeding disabled");
             return;
         }
 
         InitAppUserWithClaims().Wait();
+        InitCompany().Wait();
 
     }
 
+    private async Task InitCompany()
+    {
+        if (_dbContext.Companies.Any())
+        {
+            _logger.LogWarning("Default company is exists");
+            return;
+        }
+
+        var template = new List<Company>
+        {
+            new()
+            {
+                Name = "ООО ЦИТ",
+            },
+            new()
+            {
+                Name = "Google",
+            },
+            new()
+            {
+                Name = "Камаз"
+            }
+        };
+
+        await _dbContext.Companies.AddRangeAsync(template);
+        _dbContext.SaveChangesAsync().Wait();
+        _logger.LogDebug("Сompanies added to the database");
+    }
+
+
     private async Task InitClaims()
     {
-        var users = await dbContext.AppUsers.ToArrayAsync();
+        var users = await _dbContext.AppUsers.ToArrayAsync();
 
         foreach (var user in users)
         {
-            var res = await userManager.AddClaimAsync(user, new Claim(ClaimTypes.IsPersistent, user.Id.ToString()));
-            var res2 = await userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, RoleEmum.User.ToString()));
+            var res = await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.IsPersistent, user.Id.ToString()));
+            var res2 = await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, RoleEmum.User.ToString()));
             if(!res.Succeeded || !res2.Succeeded)
             {
-                logger.LogError("Claims can not added");
+                _logger.LogError("Claims can not be added");
                 return;
             }
         }
     }
 
+
     private async Task InitAppUserWithClaims()
     {
-        if (dbContext.AppUsers.Any())
+        if (_dbContext.AppUsers.Any())
         {
-            logger.LogWarning("Default users is exists");
+            _logger.LogWarning("Default users is exists");
             return;
         }
 
@@ -80,15 +112,14 @@ public class SeedingService : ISeedingService
 
         foreach (var user in usersTemplate)
         {
-            var res = await userManager.CreateAsync(user, user.MasterPassword);
+            var res = await _userManager.CreateAsync(user, user.MasterPassword);
             if (res.Succeeded)
             {
-                logger.LogDebug(user.Email + " add DB");
+                _logger.LogDebug(user.Email + " user added to the database");
             }
-            logger.LogError(user.Email + " can not add DB");
+            _logger.LogError(user.Email + " can not to be add DB");
         }
 
         InitClaims().Wait();
-
     }
 }

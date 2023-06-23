@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Passwork.Server.Application;
 using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Passwork.Server.DAL;
+using Passwork.Server.Domain.Entity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +16,7 @@ builder.Services.AddMy(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -36,10 +40,7 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
-app.Services
-        .CreateScope()
-        .ServiceProvider
-        .GetService<ISeedingService>()!
-        .DbInit(true);
+app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(true);
+app.UseAuthentication();;
 
 app.Run();
