@@ -1,13 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services;
 using Passwork.Server.DAL;
+using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
+using System.Security.Claims;
 
-namespace Passwork.Server.Application;
+namespace Passwork.Server.Application.Configure;
 
 public static class ApplicationConfiguration
 {
@@ -18,16 +22,44 @@ public static class ApplicationConfiguration
             opt.UseNpgsql(config.GetConnectionString("PostgreDb"));
         });
 
-        services.AddIdentity<AppUser, IdentityRole<Guid>>(options => {
+        services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
+        {
             options.SignIn.RequireConfirmedAccount = true;
             options.SignIn.RequireConfirmedPhoneNumber = false;
-            })
+        })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager<SignInManager<AppUser>>()
             .AddUserManager<UserManager<AppUser>>()
             .AddDefaultTokenProviders();
 
         services.AddScoped<ISeedingService, SeedingService>();
+        services.AddScoped<IAccountService, AccountService>();
+
+        services.AddAuthorization();
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                JwtOptions.SetKey(config["JWT_KEY"]);
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = JwtOptions.ISSUER,
+                    ValidateAudience = true,
+                    ValidAudience = JwtOptions.AUDIENCE,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = JwtOptions.GetSymmetricSecurityKey(),
+                    ValidateIssuerSigningKey = true
+                };
+            });
+
+        services.AddAuthorization((opt) =>
+        {
+            opt.AddPolicy("Admin", p =>
+                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())
+                                        || x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())));
+            opt.AddPolicy("User", p =>
+                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())));
+        });
 
         services.Configure<IdentityOptions>(options =>
         {

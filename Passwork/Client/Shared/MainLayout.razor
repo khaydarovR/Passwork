@@ -5,23 +5,30 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        My Application
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Key" Color="Color.Inherit" />
     </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
-        <NavMenu/>
+    <MudDrawer @bind-Open="@open" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">My App</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Match="NavLinkMatch.All" Href="/">Главная</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All">Аккаунт</MudNavLink>
+            <MudNavLink Href="/register">Регистрация</MudNavLink>
+        </MudNavMenu>
     </MudDrawer>
-    <MudMainContent>
+    <MudMainContent Class="pt-16 px-16">
         @Body
     </MudMainContent>
 </MudLayout>
-
 @code {
-    bool _drawerOpen = true;
+    bool open = false;
 
-    void DrawerToggle()
+    void ToggleDrawer()
     {
-        _drawerOpen = !_drawerOpen;
+        open = !open;
     }
 }

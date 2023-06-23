@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.ResponseCompression;
-using Passwork.Server.Application;
 using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain.Entity;
+using Passwork.Server.Application.Configure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +35,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
