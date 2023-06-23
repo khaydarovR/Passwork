@@ -40,7 +40,7 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
-app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(true);
+app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(false);
 app.UseAuthentication();;
 
 app.Run();
