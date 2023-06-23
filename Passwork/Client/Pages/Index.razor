@@ -10,7 +10,16 @@
             <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">MAIN</MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+                <AuthorizeView>
+                    <Authorized>
+                        <span>Вы авторизоывны </span>
+                    </Authorized>
+                    <NotAuthorized>
+                        <span>Вы видите тк вы не авторизвоаны</span>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="12" md="4">
             <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>

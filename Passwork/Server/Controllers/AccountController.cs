@@ -43,5 +43,27 @@ namespace Passwork.Server.Controllers
             }
             return BadRequest();
         }
+
+
+        [HttpPost("Login")]
+        public async Task<ActionResult> Login([FromBody] UserLoginDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var response = await _accountService.LoginUser(model);
+            if (response.IsSuccessful)
+            {
+                return Ok(response.ResponseModel);
+            }
+
+            foreach (var e in response.Errors)
+            {
+                ModelState.AddModelError("", e);
+            }
+            return BadRequest(response.Errors);
+        }
     }
 }

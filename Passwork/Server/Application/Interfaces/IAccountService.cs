@@ -9,7 +9,7 @@ namespace Passwork.Server.Application.Interfaces
     {
         Task<Response<AppUser>> ExitFromAccount();
         Task<Response<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal);
-        Task<Response<AppUser>> LoginUser(UserLoginDto model);
+        Task<Response<string>> LoginUser(UserLoginDto model);
         Task<Response<string>> RegisterNewUser(UserRegisterDto model);
     }
 }

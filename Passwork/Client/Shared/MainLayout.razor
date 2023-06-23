@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using Passwork.Client.Components;
+
+@inherits LayoutComponentBase
+@inject IDialogService DialogService
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -8,27 +11,46 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Key" Color="Color.Inherit" />
+        <AuthorizeView>
+            <Authorized>
+                <MudText>@context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)!.Value</MudText>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton OnClick="@((e) => OpenDialog(maxWidth))" Variant="Variant.Filled" Color="Color.Primary">
+                    Войти
+                </MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Key" Color="Color.Inherit" />
+            </NotAuthorized>
+        </AuthorizeView>
+        
     </MudAppBar>
     <MudDrawer @bind-Open="@open" Elevation="1">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h6">My App</MudText>
+            <MudText Typo="Typo.h6">ComPas</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" Href="/">Главная</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All">Аккаунт</MudNavLink>
-            <MudNavLink Href="/register">Регистрация</MudNavLink>
+            <MudNavLink Href="/counter">Аккаунт</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent Class="pt-16 px-16">
         @Body
     </MudMainContent>
 </MudLayout>
+
+
 @code {
     bool open = false;
 
     void ToggleDrawer()
     {
         open = !open;
+    }
+
+    DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private void OpenDialog(DialogOptions options)
+    {
+            DialogService.Show(typeof(Login), "Вход", options);
     }
 }

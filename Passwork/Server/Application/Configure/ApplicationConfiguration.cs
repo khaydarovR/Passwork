@@ -24,8 +24,9 @@ public static class ApplicationConfiguration
 
         services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
         {
-            options.SignIn.RequireConfirmedAccount = true;
+            options.SignIn.RequireConfirmedAccount = false;
             options.SignIn.RequireConfirmedPhoneNumber = false;
+            options.SignIn.RequireConfirmedEmail = false;
         })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager<SignInManager<AppUser>>()

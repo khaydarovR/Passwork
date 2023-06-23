@@ -22,6 +22,11 @@ public class UserLoginDto
     [DataType(DataType.Password)]
     public string Password { get; set; }
 
+    [Required(ErrorMessage = "Правильно заполните поле")]
+    [Display(Name = "Исполльзуеться в качестве ключа для шифрования ваших данных")]
+    [DataType(DataType.Password)]
+    public string MasterPassword { get; set; }
+
     [Display(Name = "Запомнить?")]
     public bool RememberMe { get; set; }
 }

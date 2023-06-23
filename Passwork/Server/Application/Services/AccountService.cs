@@ -57,17 +57,20 @@ public class AccountService : IAccountService
         return badResponse;
     }
 
-    public async Task<Response<AppUser>> LoginUser(UserLoginDto model)
+    public async Task<Response<string>> LoginUser(UserLoginDto model)
     {
         var result = await _signInManager.PasswordSignInAsync
             (model.Email, model.Password, model.RememberMe, false);
 
         if (result.Succeeded)
         {
-            return new Response<AppUser>(await _userManager.Users.FirstAsync(u => u.Email == model.Email), true);
+            var userDb = await _userManager.Users.SingleAsync(u => u.Email == model.Email);
+            var claims = await _userManager.GetClaimsAsync(userDb);
+            var jwt = CreateJwt(claims.ToList());
+            return new Response<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
         }
 
-        return new Response<AppUser>("Ошибка авторизации", false);
+        return new Response<string>("Ошибка авторизации", false);
     }
 
     public async Task<Response<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal)

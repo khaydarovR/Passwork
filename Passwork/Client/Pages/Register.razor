@@ -1,8 +1,11 @@
 ﻿@page "/register"
-@inject HttpClient Http
+@inject AuthenticationManager AuthenticationManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
-@using Passwork.Shared.Dto;
 @using System.ComponentModel.DataAnnotations
+@using Blazored.Toast.Services;
+@using static Passwork.Client.Utils.ErrorEnum;
 
 
 <MudPaper Class="mt-5">
@@ -72,12 +75,24 @@
     {
         if (success)
         {
-            var response = await Http.PostAsJsonAsync("api/Account/Register", model);
-            jwt = await response.Content.ReadAsStringAsync();
-            model = new UserRegisterDto();
+            HandleRegister();
             isLoad = false;
             StateHasChanged();
         }
+    }
+
+    private async void HandleRegister()
+    {
+        if (await AuthenticationManager.Register(model))
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            //ToastService.ShowError(AuthenticationManager.ErrorMessage, ErrorType.RegistrationError.ToString());
+            AuthenticationManager.ErrorMessage = string.Empty;
+        }
+
     }
 
 }

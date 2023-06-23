@@ -1,0 +1,88 @@
+﻿@inject AuthenticationManager AuthenticationManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Toast.Services;
+@using static Passwork.Client.Utils.ErrorEnum;
+
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField Label="Email" Class="mt-3"
+                            @bind-Value="model.Email" For="@(() => model.Email)" />
+                            <MudTextField Label="Password" HelperText="Choose a strong password" Class="mt-3"
+                            @bind-Value="model.Password" For="@(() => model.Password)" InputType="InputType.Password" />
+                            
+                            <MudTextField Label="Мастер пароль" HelperText="Ключ для шифрования ваших данных"
+                                          Class="mt-3" @bind-Value="model.MasterPassword" For="@(() => model.MasterPassword)" />
+
+                            <MudCheckBox T="bool" Label="Запоинить меня" @bind-Value="model.RememberMe" For="@(() => model.RememberMe)" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Войти</MudButton>
+                        </MudCardActions>
+                        @if (isLoad)
+                        {
+                            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                        }
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    UserLoginDto model = new UserLoginDto();
+    bool success;
+    bool isLoad;
+    string jwt;
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private void OnValidSubmit(EditContext context)
+    {
+        isLoad = true;
+        success = true;
+        StateHasChanged();
+        SendRequest().Wait();
+    }
+
+    private async Task SendRequest()
+    {
+        if (success)
+        {
+            HandleRegister();
+            isLoad = false;
+            StateHasChanged();
+        }
+    }
+
+    private async void HandleRegister()
+    {
+        if (await AuthenticationManager.Login(model))
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            //ToastService.ShowError(AuthenticationManager.ErrorMessage, ErrorType.RegistrationError.ToString());
+            AuthenticationManager.ErrorMessage = string.Empty;
+        }
+
+    }
+}
