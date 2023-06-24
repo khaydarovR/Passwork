@@ -21,4 +21,16 @@
     <ProjectReference Include="..\Shared\Passwork.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Components\CreateCom.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\CreateCom.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\CreateCom.razor" />
+  </ItemGroup>
+
 </Project>

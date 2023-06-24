@@ -12,8 +12,8 @@ using Passwork.Server.DAL;
 namespace Passwork.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230622193924_init")]
-    partial class init
+    [Migration("20230624203843_initnew")]
+    partial class initnew
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -166,7 +166,7 @@ namespace Passwork.Server.Migrations
                     b.Property<DateTime>("At")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 6, 22, 19, 39, 24, 185, DateTimeKind.Utc).AddTicks(5163));
+                        .HasDefaultValue(new DateTime(2023, 6, 24, 20, 38, 43, 233, DateTimeKind.Utc).AddTicks(5235));
 
                     b.Property<Guid>("PasswordId")
                         .HasColumnType("uuid");
@@ -268,11 +268,16 @@ namespace Passwork.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("AppUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
 
                     b.HasIndex("Id")
                         .IsUnique();
@@ -477,6 +482,17 @@ namespace Passwork.Server.Migrations
                     b.Navigation("Password");
                 });
 
+            modelBuilder.Entity("Passwork.Server.Domain.Entity.Company", b =>
+                {
+                    b.HasOne("Passwork.Server.Domain.Entity.AppUser", "Owner")
+                        .WithMany("Companies")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
             modelBuilder.Entity("Passwork.Server.Domain.Entity.Password", b =>
                 {
                     b.HasOne("Passwork.Server.Domain.Entity.Safe", "Safe")
@@ -540,6 +556,8 @@ namespace Passwork.Server.Migrations
             modelBuilder.Entity("Passwork.Server.Domain.Entity.AppUser", b =>
                 {
                     b.Navigation("ChangerHistory");
+
+                    b.Navigation("Companies");
 
                     b.Navigation("SafeUsers");
                 });

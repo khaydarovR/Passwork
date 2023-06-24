@@ -38,6 +38,10 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         companyBuilder.HasKey(c => c.Id);
         companyBuilder.HasIndex(c => c.Id).IsUnique();
         companyBuilder.Property(c => c.Name).IsRequired();
+        companyBuilder.HasOne(c => c.Owner)
+            .WithMany(u => u.Companies)
+            .HasForeignKey(c => c.AppUserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<SafeUsers>()
             .HasKey(sc => new { sc.SafeId, sc.AppUserId });

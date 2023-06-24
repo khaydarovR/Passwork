@@ -3,7 +3,9 @@
 public enum RightEnum
 {
     None,
+    Visible,
     Read,
     Write,
-    Delete
+    Delete,
+    Owner
 }

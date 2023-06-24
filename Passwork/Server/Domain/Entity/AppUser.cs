@@ -8,4 +8,5 @@ public class AppUser : IdentityUser<Guid>
     public string MasterPassword { get; set; } = null!;
     public IList<SafeUsers> SafeUsers { get; set; }
     public ICollection<ActivityLog> ChangerHistory { get; set; }
+    public ICollection<Company> Companies { get; set; }
 }

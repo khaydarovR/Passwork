@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Passwork.Server.Migrations
 {
-    public partial class init : Migration
+    public partial class initnew : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -49,18 +49,6 @@ namespace Passwork.Server.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Companies",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Companies", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -182,6 +170,25 @@ namespace Passwork.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Companies",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    AppUserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Companies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Companies_AspNetUsers_AppUserId",
+                        column: x => x.AppUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Safes",
                 columns: table => new
                 {
@@ -256,7 +263,7 @@ namespace Passwork.Server.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    At = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2023, 6, 22, 19, 39, 24, 185, DateTimeKind.Utc).AddTicks(5163)),
+                    At = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2023, 6, 24, 20, 38, 43, 233, DateTimeKind.Utc).AddTicks(5235)),
                     Title = table.Column<string>(type: "text", nullable: false),
                     PasswordId = table.Column<Guid>(type: "uuid", nullable: false),
                     AppUsreId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -363,6 +370,11 @@ namespace Passwork.Server.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Companies_AppUserId",
+                table: "Companies",
+                column: "AppUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Companies_Id",
                 table: "Companies",
                 column: "Id",
@@ -443,13 +455,13 @@ namespace Passwork.Server.Migrations
                 name: "Tags");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
                 name: "Safes");
 
             migrationBuilder.DropTable(
                 name: "Companies");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }
