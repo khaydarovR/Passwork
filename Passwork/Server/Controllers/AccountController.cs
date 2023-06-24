@@ -28,7 +28,7 @@ namespace Passwork.Server.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest("Выполните все требования к данным");
             }
 
             var response = await _accountService.RegisterNewUser(model);
@@ -41,7 +41,7 @@ namespace Passwork.Server.Controllers
             {
                 ModelState.AddModelError("", e);
             }
-            return BadRequest();
+            return BadRequest(response.Errors);
         }
 
 

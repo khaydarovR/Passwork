@@ -18,7 +18,7 @@ public class UserLoginDto
 
     [Required(ErrorMessage = "Обязательное поле")]
     [Display(Name = "Пароль")]
-    [StringLength(20, MinimumLength = 6, ErrorMessage = "Не достаточно символов")]
+    [StringLength(20, MinimumLength = 4, ErrorMessage = "Не достаточно символов")]
     [DataType(DataType.Password)]
     public string Password { get; set; }
 

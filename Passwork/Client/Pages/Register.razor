@@ -25,7 +25,7 @@
                                       Class="mt-3" @bind-Value="model.MasterPassword" For="@(() => model.MasterPassword)"/>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                        <Passwork.Client.Components.ButtonWait @bind-IsLoad=@isLoad>Регистрация</Passwork.Client.Components.ButtonWait>
                     </MudCardActions>
                     @if (isLoad)
                     {
@@ -60,39 +60,31 @@
 @code {
     UserRegisterDto model = new UserRegisterDto();
     bool success;
-    bool isLoad;
+    bool isLoad = false;
     string jwt;
 
     private void OnValidSubmit(EditContext context)
     {
-        isLoad = true;
-        success = true;
-        StateHasChanged();
-        SendRequest().Wait();
+        HandleRegister();
     }
 
-    private async Task SendRequest()
-    {
-        if (success)
-        {
-            HandleRegister();
-            isLoad = false;
-            StateHasChanged();
-        }
-    }
 
     private async void HandleRegister()
     {
+        isLoad = true;
+        StateHasChanged();
         if (await AuthenticationManager.Register(model))
         {
-            NavigationManager.NavigateTo("/login");
+            success = true;
+            NavigationManager.NavigateTo("/");
         }
         else
         {
             //ToastService.ShowError(AuthenticationManager.ErrorMessage, ErrorType.RegistrationError.ToString());
             AuthenticationManager.ErrorMessage = string.Empty;
+            isLoad = false;
         }
-
+        StateHasChanged();
     }
 
 }

@@ -4,6 +4,7 @@ namespace Passwork.Client.Services;
 
 public class TokenService
 {
+    private const string _key = "token";
     private readonly ILocalStorageService _localStorageService;
 
     public TokenService(ILocalStorageService localStorageService)
@@ -16,7 +17,7 @@ public class TokenService
     /// </summary>
     public async Task DeleteTokenAsync()
     {
-        await _localStorageService.RemoveItemAsync("token");
+        await _localStorageService.RemoveItemAsync(_key);
     }
 
     /// <summary>
@@ -24,7 +25,7 @@ public class TokenService
     /// </summary>
     /// <returns><see cref="Task{TResult}">Task&lt;string&gt;</see></returns>
     public async Task<string> GetTokenAsync() =>
-        await _localStorageService.GetItemAsync<string>("token");
+        await _localStorageService.GetItemAsync<string>(_key);
 
     /// <summary>
     /// Установить токен в локальное хранилище.
@@ -34,7 +35,7 @@ public class TokenService
     {
         if (token != null)
         {
-            await _localStorageService.SetItemAsync<string>("token", token);
+            await _localStorageService.SetItemAsync<string>(_key, token);
         }
     }
 }

@@ -2,6 +2,7 @@
 
 @inherits LayoutComponentBase
 @inject IDialogService DialogService
+@inject AuthenticationManager AuthManager
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -9,14 +10,14 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" @onclick="@ToggleDrawer" />
         <MudSpacer />
         <AuthorizeView>
             <Authorized>
                 <MudText>@context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)!.Value</MudText>
             </Authorized>
             <NotAuthorized>
-                <MudButton OnClick="@((e) => OpenDialog(maxWidth))" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton OnClick="@((e) => OpenDialog(maxWidth))" Variant="Variant.Filled" Color="Color.Info">
                     Войти
                 </MudButton>
                 <MudIconButton Icon="@Icons.Material.Filled.Key" Color="Color.Inherit" />
@@ -32,6 +33,13 @@
             <MudNavLink Match="NavLinkMatch.All" Href="/">Главная</MudNavLink>
             <MudNavLink Href="/counter">Аккаунт</MudNavLink>
         </MudNavMenu>
+        <AuthorizeView>
+            <Authorized>
+                <MudPaper Class="d-flex align-end flex-grow-1 gap-4" Elevation="0">
+                    <MudButton Class="m-4" Variant="Variant.Text" @onclick="Logout" Color="Color.Error">Выйти</MudButton>
+                </MudPaper>
+            </Authorized>
+        </AuthorizeView>
     </MudDrawer>
     <MudMainContent Class="pt-16 px-16">
         @Body
@@ -51,6 +59,11 @@
 
     private void OpenDialog(DialogOptions options)
     {
-            DialogService.Show(typeof(Login), "Вход", options);
+        DialogService.Show(typeof(Login), "Вход", options);
+    }
+
+    async void Logout()
+    {
+        await AuthManager.Logout();
     }
 }
