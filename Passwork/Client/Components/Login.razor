@@ -1,6 +1,7 @@
 ﻿@inject AuthenticationManager AuthenticationManager
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@inject ISnackbar Snackbar
 
 @using System.ComponentModel.DataAnnotations
 @using Blazored.Toast.Services;
@@ -66,7 +67,9 @@
 
             if (await AuthenticationManager.Login(model))
             {
+                AddSnackbarSuc();
                 NavigationManager.NavigateTo("/");
+
             }
             else
             {
@@ -74,9 +77,21 @@
                 AuthenticationManager.ErrorMessage = string.Empty;
                 errorMessage = "Неверные данные";
                 isLoad = false;
+                AddSnackbarError();
             }
+
             StateHasChanged();
         }
+    }
+
+    private void AddSnackbarSuc()
+    {
+        Snackbar.Add("Успешно зашли", Severity.Success);
+    }
+
+    private void AddSnackbarError()
+    {
+        Snackbar.Add("Ошибка входа", Severity.Error);
     }
 
     void NavigateToRegisterPage()

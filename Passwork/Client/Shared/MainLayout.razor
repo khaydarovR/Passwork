@@ -3,6 +3,7 @@
 @inherits LayoutComponentBase
 @inject IDialogService DialogService
 @inject AuthenticationManager AuthManager
+@inject ISnackbar Snackbar
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -65,5 +66,6 @@
     async void Logout()
     {
         await AuthManager.Logout();
+        Snackbar.Add("Вы вышли с аккаунта", Severity.Warning);
     }
 }
