@@ -17,10 +17,12 @@ namespace Passwork.Server.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<CompanyController> _logger;
 
-        public CompanyController(AppDbContext context)
+        public CompanyController(AppDbContext context, ILogger<CompanyController> logger)
         {
             this._context = context;
+            this._logger = logger;
         }
 
 
@@ -32,25 +34,26 @@ namespace Passwork.Server.Controllers
             {
                 return BadRequest("Не валидные данные");
             }
-            var id = User.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
-            var owner = await _context.AppUsers.FirstAsync(u => u.Id == Guid.Parse(id));
+            //var id = User.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+            var id = User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
             await _context.Companies.AddAsync(new Company
             {
                 Name = model.Name,
-                Owner = owner
+                AppUserId = Guid.Parse(id)
             });
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Created com");
 
             return Ok();
         }
 
 
-        [HttpGet]
+        [HttpGet("GetAll")]
         [Authorize]
         public async Task<ActionResult<List<CompaniesOwnerVm>>> GetAll()
         {
             var companies = new List<Company>();
-            var id = User.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+            var id = User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
             var safes = await _context.Safes
                 .Include(s => s.SafeUsers)
                 .Where(s => s.SafeUsers.Any(u => u.Id == Guid.Parse(id)))
@@ -65,6 +68,27 @@ namespace Passwork.Server.Controllers
                     companies.Add(r);
                 }
             }
+
+            var result = new List<CompaniesOwnerVm>();
+            foreach (var com in companies)
+            {
+                result.Add(com.MapToVm());
+            }
+
+            return Ok(companies);
+        }
+
+
+        [HttpGet("OwnerCom")]
+        [Authorize]
+        public async Task<ActionResult<List<CompaniesOwnerVm>>> OwnerCom()
+        {
+            var id = User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value!;
+            var companies = await _context.Companies
+                .Include(s => s.Safes)
+                .Where(c => c.AppUserId == Guid.Parse(id))
+                .ToListAsync();
+
 
             var result = new List<CompaniesOwnerVm>();
             foreach (var com in companies)

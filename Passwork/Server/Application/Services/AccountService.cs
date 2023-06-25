@@ -82,12 +82,6 @@ public class AccountService : IAccountService
     }
 
 
-    public async Task<Response<AppUser>> ExitFromAccount()
-    {
-        await _signInManager.SignOutAsync();
-        return new Response<AppUser>(true);
-    }
-
     private async Task<AppUser> MapToAppUser(UserRegisterDto model)
     {
         var newUser = new AppUser()

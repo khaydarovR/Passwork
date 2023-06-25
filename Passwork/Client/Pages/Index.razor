@@ -1,52 +1,142 @@
 ﻿@page "/"
+@using Passwork.Shared.ViewModels;
+@using System.Runtime.CompilerServices;
+@using System.ComponentModel;
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-2 mt-4">
+            <MudText Typo="Typo.h6" Class="px-4">/ Компания / Сейф / </MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+            <AuthorizeView>
+                <Authorized>
+                    <MudNavMenu Class="mud-width-full">
+                        <MudText Typo="Typo.h6" Class="px-4">Компании</MudText>
+                        <MudDivider Class="my-2" />
+                        @foreach (var com in OwnerCompanies)
+                        {
+                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
+                                @if(com.SafeVms != null)
+                                {
+                                    @foreach (var safe in com.SafeVms)
+                                    {
+                                        <MudNavLink Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                    }
+                                }
+                            </MudNavGroup>
+                        }
+                        @foreach (var com in Companies)
+                        {
+                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
+                                @if(com.SafeVms != null)
+                                {
+                                    @foreach (var safe in com.SafeVms)
+                                    {
+                                        <MudNavLink Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                    }
+                                }
+                            </MudNavGroup>
+                        }
+                    </MudNavMenu>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="9">
+        <MudPaper Class="d-flex align-right justify-right mud-width-full py-8">
+            <AuthorizeView>
+                <Authorized>
+                    <MudSimpleTable>
+                        <thead>
+                            <tr>
+                                @foreach (var h in headings)
+                                {
+                                    <th>@h</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in rows)
+                            {
+                                <tr>
+                                    @foreach (var x in row.Split())
+                                    {
+                                        <td>@x</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
-<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
-    <MudGrid>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">MAIN</MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
-                <AuthorizeView>
-                    <Authorized>
-                        <span>Вы авторизоывны </span>
-                    </Authorized>
-                    <NotAuthorized>
-                        <span>Вы видите тк вы не авторизвоаны</span>
-                    </NotAuthorized>
-                </AuthorizeView>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%"></MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code {
+    public List<CompaniesOwnerVm> Companies { get; set; } = new();
+    public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOwnerCom();
+        await LoadLinkedCom();
+        StateHasChanged();
+    }
+
+    async Task LoadOwnerCom()
+    {
+        var response = await HttpClient.GetAsync("/api/Company/OwnerCom");
+        if (response.IsSuccessStatusCode)
+        {
+            OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
+            Snackbar.Add("Получены ваши компании");
+        }
+        else
+        {
+            Snackbar.Add("Ошибка");
+        }
+    }
+
+
+    async Task LoadLinkedCom()
+    {
+        var response = await HttpClient.GetAsync("/api/Company/GetAll");
+
+        if (response.IsSuccessStatusCode)
+        {
+            Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
+            Snackbar.Add("Получены связанные компании");
+
+        }
+        else
+        {
+            Snackbar.Add("Ошибка");
+        }
+    }
+
+    string[] headings = { "ID", "Name", "Email" };
+    string[] rows = {
+        @"1 Krishna kpartner0@usatoday.com",
+        @"2 Webb wstitle1@ning.com",
+        @"3 Nathanil nneal2@cyberchimps.com",
+        @"4 Adara alockwood3@patch.com",
+        @"5 Cecilius cchaplin4@shinystat.com",
+        @"6 Cicely cemerine9@soup.io",
+    };
+}

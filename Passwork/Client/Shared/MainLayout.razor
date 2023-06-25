@@ -1,9 +1,13 @@
 ﻿@using Passwork.Client.Components;
+@using Passwork.Shared.ViewModels;
+@using Passwork.Client.Services;
 
 @inherits LayoutComponentBase
 @inject IDialogService DialogService
-@inject AuthenticationManager AuthManager
 @inject ISnackbar Snackbar
+@inject AuthenticationStateProvider CustomAuthStateProvider
+@inject HttpClient HttpClient
+@inject AuthenticationManager AuthManager
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -15,11 +19,6 @@
         <MudSpacer />
         <AuthorizeView>
             <Authorized>
-                @Icons.Material.Filled.Add
-                <MudButton Class="align-self-start" OnClick="@((e) => CreateComDialog(maxWidth))" Variant="Variant.Filled" Color="Color.Info">
-                    Новая компания
-                </MudButton>
-                <MudSpacer/>
                 <MudText>@context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)!.Value</MudText>
             </Authorized>
             <NotAuthorized>
@@ -36,7 +35,8 @@
             <MudText Typo="Typo.h6">ComPas</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" Href="/">Главная</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All" Href="/">Главная</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Add" OnClick="@((e) => CreateComDialog(maxWidth))">Новая компания</MudNavLink>
             <MudNavLink Href="/counter">Коунтер</MudNavLink>
         </MudNavMenu>
         <AuthorizeView>

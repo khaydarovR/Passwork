@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,10 +35,10 @@ public static class ApplicationConfiguration
         services.AddScoped<ISeedingService, SeedingService>();
         services.AddScoped<IAccountService, AccountService>();
 
-        services.AddAuthorization();
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                options.RequireHttpsMetadata = false;
                 JwtOptions.SetKey(config["JWT_KEY"]);
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -73,16 +72,16 @@ public static class ApplicationConfiguration
             options.User.RequireUniqueEmail = true;
         });
 
-        services.ConfigureApplicationCookie(options =>
-        {
-            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            options.Cookie.Name = "KhaydarovCooks";
-            options.Cookie.HttpOnly = true;
-            options.ExpireTimeSpan = TimeSpan.FromMinutes(50);
-            options.LoginPath = "/Identity/Account/Login";
-            options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-            options.SlidingExpiration = true;
-        });
+        //services.ConfigureApplicationCookie(options =>
+        //{
+        //    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+        //    options.Cookie.Name = "KhaydarovCooks";
+        //    options.Cookie.HttpOnly = true;
+        //    options.ExpireTimeSpan = TimeSpan.FromDays(3);
+        //    options.LoginPath = "/Identity/Account/Login";
+        //    options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
+        //    options.SlidingExpiration = true;
+        //});
 
         services.Configure<SecurityStampValidatorOptions>(o =>
                    o.ValidationInterval = TimeSpan.FromMinutes(50));
