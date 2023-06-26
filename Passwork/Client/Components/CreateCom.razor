@@ -1,6 +1,7 @@
 ﻿@inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject ApiService ApiService
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms;
@@ -60,32 +61,21 @@
             success = true;
             StateHasChanged();
 
-            var response = await HttpClient.PostAsJsonAsync("/api/Company/Create", model);
-            if (response.StatusCode == HttpStatusCode.OK)
+            var isDataPosted = await ApiService.PostDataAsync("/api/Company/Create", model);
+            if (isDataPosted)
             {
-                AddSnackbarSuc();
-                StateHasChanged();
-                NavigationManager.NavigateTo("/");
+                Snackbar.Add("Успешно создана", Severity.Success);
+                ApiService.NavigateTo("/");
             }
             else
             {
                 errorMessage = "Ошибка";
                 isLoad = false;
-                AddSnackbarError();
+                Snackbar.Add("Ошибка", Severity.Error);
             }
 
             StateHasChanged();
         }
-    }
-
-    private void AddSnackbarSuc()
-    {
-        Snackbar.Add("Успешно", Severity.Success);
-    }
-
-    private void AddSnackbarError()
-    {
-        Snackbar.Add("Ошибка", Severity.Error);
     }
 
     void NavigateToRegisterPage()

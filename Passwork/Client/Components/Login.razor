@@ -68,7 +68,7 @@
             if (await AuthenticationManager.Login(model))
             {
                 AddSnackbarSuc();
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("/", true);
 
             }
             else

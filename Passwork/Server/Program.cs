@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Application.Configure;
+using Passwork.Server.Application.Services.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,8 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+
+app.MapHub<ApiHub>("/companyhub");
 
 app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(false);
 app.UseAuthentication();;

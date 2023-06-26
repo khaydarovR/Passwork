@@ -5,6 +5,8 @@
 
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
+@inject ApiService ApiService
+@inject CompanyService CompanyService
 
 <PageTitle>Index</PageTitle>
 
@@ -21,9 +23,9 @@
                     <MudNavMenu Class="mud-width-full">
                         <MudText Typo="Typo.h6" Class="px-4">Компании</MudText>
                         <MudDivider Class="my-2" />
-                        @foreach (var com in OwnerCompanies)
+                        @foreach (var com in ApiService.OwnerCompanies)
                         {
-                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
+                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Info" Expanded="true">
                                 @if(com.SafeVms != null)
                                 {
                                     @foreach (var safe in com.SafeVms)
@@ -31,9 +33,10 @@
                                         <MudNavLink Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
                                     }
                                 }
+                                <MudNavLink Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать сейф</MudNavLink>
                             </MudNavGroup>
                         }
-                        @foreach (var com in Companies)
+                        @foreach (var com in ApiService.Companies)
                         {
                             <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
                                 @if(com.SafeVms != null)
@@ -89,46 +92,26 @@
 
 
 @code {
-    public List<CompaniesOwnerVm> Companies { get; set; } = new();
-    public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadOwnerCom();
-        await LoadLinkedCom();
+        CompanyService.OnCompanyUpdated += HandleCompanyUpdated;
+        await ApiService.LoadOwnerCom();
+        await ApiService.LoadLinkedCom();
         StateHasChanged();
     }
 
-    async Task LoadOwnerCom()
+    private void HandleCompanyUpdated()
     {
-        var response = await HttpClient.GetAsync("/api/Company/OwnerCom");
-        if (response.IsSuccessStatusCode)
+        // Обновление списка компаний при получении обновлений
+        InvokeAsync(async () =>
         {
-            OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
-            Snackbar.Add("Получены ваши компании");
-        }
-        else
-        {
-            Snackbar.Add("Ошибка");
-        }
+            await ApiService.LoadOwnerCom();
+            await ApiService.LoadLinkedCom();
+            StateHasChanged();
+        });
     }
 
-
-    async Task LoadLinkedCom()
-    {
-        var response = await HttpClient.GetAsync("/api/Company/GetAll");
-
-        if (response.IsSuccessStatusCode)
-        {
-            Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
-            Snackbar.Add("Получены связанные компании");
-
-        }
-        else
-        {
-            Snackbar.Add("Ошибка");
-        }
-    }
 
     string[] headings = { "ID", "Name", "Email" };
     string[] rows = {

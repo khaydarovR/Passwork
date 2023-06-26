@@ -1,4 +1,4 @@
-﻿namespace Passwork.Server.Application.Services;
+﻿namespace Passwork.Server.Application;
 
 public class Response<T> where T : class
 {
@@ -10,16 +10,16 @@ public class Response<T> where T : class
 
     public Response(T responseModel, bool isSuccessful = true) : this(isSuccessful)
     {
-        this.ResponseModel = responseModel;
+        ResponseModel = responseModel;
     }
 
     public Response(string error, bool isSuccessful = false) : this(isSuccessful)
     {
-        this.Errors = new List<string>() { error };
+        Errors = new List<string>() { error };
     }
 
     public Response(bool isSuccessful)
     {
-        this.IsSuccessful = isSuccessful;
+        IsSuccessful = isSuccessful;
     }
 }

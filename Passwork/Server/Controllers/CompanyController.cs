@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
@@ -18,11 +19,13 @@ namespace Passwork.Server.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<CompanyController> _logger;
+        private readonly ApiHub _apiHub;
 
-        public CompanyController(AppDbContext context, ILogger<CompanyController> logger)
+        public CompanyController(AppDbContext context, ILogger<CompanyController> logger, ApiHub apiHub)
         {
             this._context = context;
             this._logger = logger;
+            this._apiHub = apiHub;
         }
 
 
@@ -34,15 +37,18 @@ namespace Passwork.Server.Controllers
             {
                 return BadRequest("Не валидные данные");
             }
-            //var id = User.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
-            var id = User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
+
+            var claimsPrincipal = HttpContext.User;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+
             await _context.Companies.AddAsync(new Company
             {
                 Name = model.Name,
                 AppUserId = Guid.Parse(id)
             });
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Created com");
+            await _apiHub.SendCompanyUpdate(id);
+            _logger.LogDebug("Created compnay and send signal to client " + id);
 
             return Ok();
         }
@@ -53,7 +59,9 @@ namespace Passwork.Server.Controllers
         public async Task<ActionResult<List<CompaniesOwnerVm>>> GetAll()
         {
             var companies = new List<Company>();
-            var id = User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
+            var claimsPrincipal = HttpContext.User;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+
             var safes = await _context.Safes
                 .Include(s => s.SafeUsers)
                 .Where(s => s.SafeUsers.Any(u => u.Id == Guid.Parse(id)))
@@ -83,7 +91,9 @@ namespace Passwork.Server.Controllers
         [Authorize]
         public async Task<ActionResult<List<CompaniesOwnerVm>>> OwnerCom()
         {
-            var id = User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value!;
+            var claimsPrincipal = HttpContext.User;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+
             var companies = await _context.Companies
                 .Include(s => s.Safes)
                 .Where(c => c.AppUserId == Guid.Parse(id))

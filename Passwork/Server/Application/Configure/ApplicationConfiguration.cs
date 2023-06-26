@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services;
+using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
@@ -34,6 +35,8 @@ public static class ApplicationConfiguration
 
         services.AddScoped<ISeedingService, SeedingService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddSignalR();
+        services.AddSingleton<ApiHub>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -49,6 +52,16 @@ public static class ApplicationConfiguration
                     ValidateLifetime = true,
                     IssuerSigningKey = JwtOptions.GetSymmetricSecurityKey(),
                     ValidateIssuerSigningKey = true
+                };
+
+                options.Events = new JwtBearerEvents()
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Path.ToString().StartsWith("/companyhub/"))
+                            context.Token = context.Request.Query["access_token"];
+                        return Task.CompletedTask;
+                    },
                 };
             });
 
@@ -72,19 +85,8 @@ public static class ApplicationConfiguration
             options.User.RequireUniqueEmail = true;
         });
 
-        //services.ConfigureApplicationCookie(options =>
-        //{
-        //    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-        //    options.Cookie.Name = "KhaydarovCooks";
-        //    options.Cookie.HttpOnly = true;
-        //    options.ExpireTimeSpan = TimeSpan.FromDays(3);
-        //    options.LoginPath = "/Identity/Account/Login";
-        //    options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-        //    options.SlidingExpiration = true;
-        //});
-
         services.Configure<SecurityStampValidatorOptions>(o =>
-                   o.ValidationInterval = TimeSpan.FromMinutes(50));
+                   o.ValidationInterval = TimeSpan.FromDays(1));
 
         return services;
     }
