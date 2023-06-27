@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using Microsoft.AspNetCore.Components;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Passwork.Client.Services;
@@ -10,11 +11,13 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private readonly TokenService _authenticationService;
     private readonly ILogger<CustomAuthStateProvider> _logger;
+    private readonly NavigationManager _navigationManager;
 
-    public CustomAuthStateProvider(TokenService authenticationService, ILogger<CustomAuthStateProvider> logger)
+    public CustomAuthStateProvider(TokenService authenticationService, ILogger<CustomAuthStateProvider> logger, NavigationManager navigationManager)
     {
         _authenticationService = authenticationService;
         this._logger = logger;
+        _navigationManager = navigationManager;
     }
     /// <summary>
     /// Получить состояние аутентификации.
@@ -28,7 +31,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         {
             try
             {
-                var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "myjwt");
+                var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "token");
                 var user = new ClaimsPrincipal(new ClaimsIdentity(identity));
                 state = new AuthenticationState(user);
             }
@@ -36,7 +39,11 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             {
                 _logger.LogError("Error GetAuthenticationStateAsync: " + ex.Message);
             }
-
+            _navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            _navigationManager.NavigateTo("/login");
         }
         NotifyAuthenticationStateChanged(Task.FromResult(state));
 

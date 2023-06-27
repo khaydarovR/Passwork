@@ -31,11 +31,11 @@ public class TokenService
     /// Установить токен в локальное хранилище.
     /// </summary>
     /// <param name="token">Токен.</param>
-    public async Task SetTokenAsync(string token)
+    public void SetToken(string token)
     {
         if (token != null)
         {
-            await _localStorageService.SetItemAsync<string>(_key, token);
+            Task.FromResult(_localStorageService.SetItemAsync<string>(_key, token));
         }
     }
 }

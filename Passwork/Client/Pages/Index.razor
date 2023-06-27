@@ -7,8 +7,9 @@
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
 @inject ApiService ApiService
-@inject CompanyService CompanyService
+@inject HubClient HubClient
 @inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Index</PageTitle>
 
@@ -97,10 +98,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        CompanyService.OnCompanyUpdated += HandleCompanyUpdated;
-        await ApiService.LoadOwnerCom();
-        await ApiService.LoadLinkedCom();
-        StateHasChanged();
+        var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
+        var authenticated = await provider.GetAuthenticationStateAsync();
+        bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
+        if ((isAuthenticated is not null) && isAuthenticated == true)
+        {
+            HubClient.OnCompanyUpdated += HandleCompanyUpdated;
+            await ApiService.LoadOwnerCom();
+            await ApiService.LoadLinkedCom();
+            StateHasChanged();
+        }
     }
 
     private void HandleCompanyUpdated()

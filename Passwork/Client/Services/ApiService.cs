@@ -39,11 +39,6 @@ public class ApiService
         if (response.IsSuccessStatusCode)
         {
             OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
-            //Snackbar.Add("Получены ваши компании");
-        }
-        else
-        {
-            //Snackbar.Add("Ошибка");
         }
     }
 
@@ -54,11 +49,6 @@ public class ApiService
         if (response.IsSuccessStatusCode)
         {
             Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
-            //Snackbar.Add("Получены связанные компании");
-        }
-        else
-        {
-            //Snackbar.Add("Ошибка");
         }
     }
 }

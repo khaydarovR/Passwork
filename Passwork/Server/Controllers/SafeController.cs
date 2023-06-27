@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain.Entity;
 using Passwork.Shared.Dto;
@@ -15,12 +16,12 @@ namespace Passwork.Server.Controllers
     public class SafeController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly UserManager<AppUser> _userManager;
+        private readonly ApiHub _apiHub;
 
-        public SafeController(AppDbContext context, UserManager<AppUser> userManager)
+        public SafeController(AppDbContext context, ApiHub apiHub)
         {
             this._context = context;
-            this._userManager = userManager;
+            _apiHub = apiHub;
         }
 
 
@@ -33,7 +34,7 @@ namespace Passwork.Server.Controllers
                 return BadRequest("Не валидные данные");
             }
             var claimsPrincipal = HttpContext.User;
-            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
 
             var newSafe = new Safe
             {
@@ -53,7 +54,7 @@ namespace Passwork.Server.Controllers
             await _context.SafeUsers.AddAsync(safeUser);
 
             await _context.SaveChangesAsync();
-
+            await _apiHub.SendCompanyUpdate(id);
             return Ok();
         }
     }

@@ -13,20 +13,25 @@ namespace Passwork.Client.Services;
 public class AuthenticationManager
 {
     private readonly HttpClient _httpClient;
-    private readonly AuthenticationStateProvider _authenticationStateProvider;
+    private readonly CustomAuthStateProvider _authenticationStateProvider;
     private readonly TokenService _authenticationService;
+    private readonly HubClient _hubClient;
+    private readonly ApiService _apiService;
 
     public string ErrorMessage { get; set; } = string.Empty;
 
     public AuthenticationManager(
         HttpClient httpClient,
         AuthenticationStateProvider authenticationStateProvider,
-        TokenService authenticationService
-        )
+        TokenService authenticationService,
+        HubClient hubClient,
+        ApiService apiService)
     {
         _httpClient = httpClient;
-        _authenticationStateProvider = authenticationStateProvider;
+        _authenticationStateProvider = (CustomAuthStateProvider)authenticationStateProvider;
         _authenticationService = authenticationService;
+        this._hubClient = hubClient;
+        _apiService = apiService;
     }
 
     /// <summary>
@@ -42,9 +47,9 @@ public class AuthenticationManager
             return false;
         }
         var token = await response.Content.ReadAsStringAsync();
-        await _authenticationService.SetTokenAsync(token);
+        _authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
-
+        await _hubClient.StartAsync();
         return true;
     }
 
@@ -62,8 +67,9 @@ public class AuthenticationManager
             return false;
         }
         var token = (await response.Content.ReadAsStringAsync())?? string.Empty;
-        await _authenticationService.SetTokenAsync(token);
+        _authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
+        await _hubClient.StartAsync();
         return true;
     }
 
@@ -72,6 +78,7 @@ public class AuthenticationManager
     /// </summary>
     public async Task Logout()
     {
+        await _httpClient.PostAsJsonAsync("/api/Account/Logout", true);
         await _authenticationService.DeleteTokenAsync();
         await _authenticationStateProvider.GetAuthenticationStateAsync();
     }

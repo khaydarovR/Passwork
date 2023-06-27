@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -64,10 +64,4 @@ public class ApiHub: Microsoft.AspNetCore.SignalR.Hub
         var ids = Storage.ConnectedUsers[userId];
         await Clients.Clients(ids).SendAsync("CompanyUpdated");
     }
-}
-
-
-public static class Storage
-{
-    public static ConcurrentDictionary<string, List<string>> ConnectedUsers = new ConcurrentDictionary<string, List<string>>();
 }

@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Passwork.Server.Application.Interfaces;
 using Passwork.Server.DAL;
+using Passwork.Server.Domain.Entity;
 using Passwork.Shared.Dto;
 
 namespace Passwork.Server.Controllers
@@ -13,13 +16,15 @@ namespace Passwork.Server.Controllers
         private readonly AppDbContext _dbContext;
         private readonly ILogger<AccountController> _logger;
         private readonly IAccountService _accountService;
+        private readonly SignInManager<AppUser> _signInManager;
 
         public AccountController(AppDbContext dbContext, ILogger<AccountController> logger,
-            IAccountService accountService)
+            IAccountService accountService, SignInManager<AppUser> signInManager)
         {
             _dbContext = dbContext;
             this._logger = logger;
             this._accountService = accountService;
+            _signInManager = signInManager;
         }
 
 
@@ -64,6 +69,13 @@ namespace Passwork.Server.Controllers
                 ModelState.AddModelError("", e);
             }
             return BadRequest(response.Errors);
+        }
+
+        [HttpPost("Logout")]
+        public async Task<ActionResult> Logut(bool isLogout)
+        {
+            await _signInManager.SignOutAsync();
+            return Ok();
         }
     }
 }

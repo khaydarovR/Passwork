@@ -17,7 +17,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>
 builder.Services.AddScoped<AuthenticationManager>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ApiService>();
-builder.Services.AddScoped<CompanyService>();
+builder.Services.AddScoped<HubClient>();
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();

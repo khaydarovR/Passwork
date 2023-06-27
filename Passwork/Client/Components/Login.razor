@@ -1,4 +1,5 @@
-﻿@inject AuthenticationManager AuthenticationManager
+﻿@page "/login"
+@inject AuthenticationManager AuthenticationManager
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
 @inject ISnackbar Snackbar
@@ -7,6 +8,7 @@
 @using Blazored.Toast.Services;
 @using Passwork.Client.Utils;
 
+<MudText Align="Align.Center" Typo="Typo.body2" Color="Color.Primary">Для работы с сайтом требуеться авторизация</MudText>
 <MudDialog>
     <DialogContent>
         <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
@@ -68,8 +70,7 @@
             if (await AuthenticationManager.Login(model))
             {
                 AddSnackbarSuc();
-                NavigationManager.NavigateTo("/", true);
-
+                NavigationManager.NavigateTo("/");
             }
             else
             {

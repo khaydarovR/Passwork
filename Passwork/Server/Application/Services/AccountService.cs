@@ -77,7 +77,6 @@ public class AccountService : IAccountService
     {
         var result = await _userManager.GetUserAsync(claimsPrincipal);
 
-        await _signInManager.SignOutAsync();
         return new Response<AppUser>("Ошибка в куках, зарегистрируйтесть заного", false);
     }
 

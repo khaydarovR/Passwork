@@ -56,6 +56,12 @@
 @code {
     bool open = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await CustomAuthStateProvider.GetAuthenticationStateAsync();
+        base.OnInitialized();
+    }
+
     void ToggleDrawer()
     {
         open = !open;
