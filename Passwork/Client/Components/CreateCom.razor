@@ -32,7 +32,7 @@
                 </MudItem>
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <MudAlert hidden="@isLoad" Severity="Severity.Error">@errorMessage</MudAlert>
+                    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
                 }
             </MudGrid>
         </EditForm>

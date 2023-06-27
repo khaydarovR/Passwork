@@ -28,15 +28,17 @@
                         <MudDivider Class="my-2" />
                         @foreach (var com in ApiService.OwnerCompanies)
                         {
-                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Info" Expanded="false">
+                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Info" Expanded="true">
                                 @if(com.SafeVms != null)
                                 {
                                     @foreach (var safe in com.SafeVms)
                                     {
-                                        <MudNavLink Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                        <MudNavLink OnClick="@(() => SelectSafe(safe.Id))" Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
                                     }
                                 }
-                                <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать сейф</MudNavLink>
+                                <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
+                                    Новый сейф
+                                </MudNavLink>
                             </MudNavGroup>
                         }
                         @foreach (var com in ApiService.Companies)
@@ -63,27 +65,13 @@
         <MudPaper Class="d-flex align-right justify-right mud-width-full py-8">
             <AuthorizeView>
                 <Authorized>
-                    <MudSimpleTable>
-                        <thead>
-                            <tr>
-                                @foreach (var h in headings)
-                                {
-                                    <th>@h</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var row in rows)
-                            {
-                                <tr>
-                                    @foreach (var x in row.Split())
-                                    {
-                                        <td>@x</td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </MudSimpleTable>
+                    <MudList Clickable="true">
+                        <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать пароль</MudNavLink>
+                        @foreach (var pas in passwords)
+                        {
+                            <MudListItem Text="@pas.Title" Icon="@Icons.Material.Filled.Key" IconColor="Color.Primary" />
+                        }
+                    </MudList>
                 </Authorized>
                 <NotAuthorized>
                     <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
@@ -95,6 +83,10 @@
 
 
 @code {
+
+    private Guid currentSafe;
+    private List<PasswordVm> passwords = new();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,15 +124,19 @@
         var dialog = await DialogService.ShowAsync<CreateSafe>("Создать сейф", parameters, maxWidth);
     }
 
+    async Task OpenPwCreator()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("SafeId", currentSafe);
 
+        var dialog = await DialogService.ShowAsync<CreatePassword>("Создать пароль", parameters, maxWidth);
+    }
 
-    string[] headings = { "ID", "Name", "Email" };
-    string[] rows = {
-        @"1 Krishna kpartner0@usatoday.com",
-        @"2 Webb wstitle1@ning.com",
-        @"3 Nathanil nneal2@cyberchimps.com",
-        @"4 Adara alockwood3@patch.com",
-        @"5 Cecilius cchaplin4@shinystat.com",
-        @"6 Cicely cemerine9@soup.io",
-    };
+    async Task SelectSafe(Guid safeId)
+    {
+        currentSafe = safeId;
+        passwords.Add(new() { Title = "1c бух" });
+        //TO DO
+        //Load safe passwords
+    }
 }

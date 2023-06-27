@@ -14,7 +14,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1">
+    <MudAppBar Dense="true" Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" @onclick="@ToggleDrawer" />
         <MudSpacer />
         <AuthorizeView>
@@ -42,7 +42,7 @@
         <AuthorizeView>
             <Authorized>
                 <MudPaper Class="d-flex align-end flex-grow-1 gap-4" Elevation="0">
-                    <MudButton Class="m-4" Variant="Variant.Text" @onclick="Logout" Color="Color.Error">Выйти</MudButton>
+                    <MudButton Class="ma-4 mb-5" Variant="Variant.Text" @onclick="Logout" Color="Color.Error">Выйти</MudButton>
                 </MudPaper>
             </Authorized>
         </AuthorizeView>
