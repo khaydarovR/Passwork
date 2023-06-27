@@ -21,8 +21,7 @@ public class ApiHub: Microsoft.AspNetCore.SignalR.Hub
     {
         Trace.TraceInformation("MapHub started. ID: {0}", Context.ConnectionId);
 
-        //var id = _httpContextAccessor.HttpContext.User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
-        var id = Context.User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
+        var id = Context.User.Identities.First().Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
         List<string> existingUserConnectionIds;
         Storage.ConnectedUsers.TryGetValue(id, out existingUserConnectionIds);
@@ -43,7 +42,7 @@ public class ApiHub: Microsoft.AspNetCore.SignalR.Hub
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         var connectionId = Context.ConnectionId;
-        var userId = Context.User.Identities.First().Claims.First(c => c.Type == ClaimTypes.IsPersistent)?.Value;
+        var userId = Context.User.Identities.First().Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
         lock (Storage.ConnectedUsers)
         {

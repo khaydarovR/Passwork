@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Passwork.Server.DAL;
@@ -11,9 +12,10 @@ using Passwork.Server.DAL;
 namespace Passwork.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230627104030_NewInit")]
+    partial class NewInit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,7 +166,7 @@ namespace Passwork.Server.Migrations
                     b.Property<DateTime>("At")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 6, 27, 11, 23, 26, 192, DateTimeKind.Utc).AddTicks(3077));
+                        .HasDefaultValue(new DateTime(2023, 6, 27, 10, 40, 30, 444, DateTimeKind.Utc).AddTicks(6754));
 
                     b.Property<Guid>("PasswordId")
                         .HasColumnType("uuid");
@@ -354,6 +356,7 @@ namespace Passwork.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Title")

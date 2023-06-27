@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Passwork.Server.Migrations
 {
-    public partial class initnew : Migration
+    public partial class NewInit : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -259,26 +259,26 @@ namespace Passwork.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ActivityLog",
+                name: "ActivityLogs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    At = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2023, 6, 24, 20, 38, 43, 233, DateTimeKind.Utc).AddTicks(5235)),
+                    At = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2023, 6, 27, 10, 40, 30, 444, DateTimeKind.Utc).AddTicks(6754)),
                     Title = table.Column<string>(type: "text", nullable: false),
                     PasswordId = table.Column<Guid>(type: "uuid", nullable: false),
                     AppUsreId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityLog", x => x.Id);
+                    table.PrimaryKey("PK_ActivityLogs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ActivityLog_AspNetUsers_AppUsreId",
+                        name: "FK_ActivityLogs_AspNetUsers_AppUsreId",
                         column: x => x.AppUsreId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ActivityLog_Passwords_PasswordId",
+                        name: "FK_ActivityLogs_Passwords_PasswordId",
                         column: x => x.PasswordId,
                         principalTable: "Passwords",
                         principalColumn: "Id",
@@ -311,19 +311,19 @@ namespace Passwork.Server.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLog_AppUsreId",
-                table: "ActivityLog",
+                name: "IX_ActivityLogs_AppUsreId",
+                table: "ActivityLogs",
                 column: "AppUsreId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLog_Id",
-                table: "ActivityLog",
+                name: "IX_ActivityLogs_Id",
+                table: "ActivityLogs",
                 column: "Id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLog_PasswordId",
-                table: "ActivityLog",
+                name: "IX_ActivityLogs_PasswordId",
+                table: "ActivityLogs",
                 column: "PasswordId");
 
             migrationBuilder.CreateIndex(
@@ -422,7 +422,7 @@ namespace Passwork.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ActivityLog");
+                name: "ActivityLogs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");

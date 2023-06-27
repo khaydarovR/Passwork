@@ -27,7 +27,7 @@ public static class MappingExtensions
         {
             safs.Add(s.MapToVm());
         }
-
+        res.SafeVms = safs;
         return res;
     }
 }

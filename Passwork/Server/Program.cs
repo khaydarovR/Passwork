@@ -7,10 +7,13 @@ using Passwork.Server.DAL;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Application.Configure;
 using Passwork.Server.Application.Services.SignalR;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+;
 builder.Services.AddRazorPages();
 
 builder.Services.AddMy(builder.Configuration);

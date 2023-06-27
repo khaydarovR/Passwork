@@ -12,8 +12,8 @@ using Passwork.Server.DAL;
 namespace Passwork.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230624203843_initnew")]
-    partial class initnew
+    [Migration("20230627112326_SafeDesNullable")]
+    partial class SafeDesNullable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -166,7 +166,7 @@ namespace Passwork.Server.Migrations
                     b.Property<DateTime>("At")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 6, 24, 20, 38, 43, 233, DateTimeKind.Utc).AddTicks(5235));
+                        .HasDefaultValue(new DateTime(2023, 6, 27, 11, 23, 26, 192, DateTimeKind.Utc).AddTicks(3077));
 
                     b.Property<Guid>("PasswordId")
                         .HasColumnType("uuid");
@@ -184,7 +184,7 @@ namespace Passwork.Server.Migrations
 
                     b.HasIndex("PasswordId");
 
-                    b.ToTable("ActivityLog");
+                    b.ToTable("ActivityLogs");
                 });
 
             modelBuilder.Entity("Passwork.Server.Domain.Entity.AppUser", b =>
@@ -356,7 +356,6 @@ namespace Passwork.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Title")

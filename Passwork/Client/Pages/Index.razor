@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Passwork.Client.Components;
 @using Passwork.Shared.ViewModels;
 @using System.Runtime.CompilerServices;
 @using System.ComponentModel;
@@ -7,6 +8,7 @@
 @inject ISnackbar Snackbar
 @inject ApiService ApiService
 @inject CompanyService CompanyService
+@inject IDialogService DialogService
 
 <PageTitle>Index</PageTitle>
 
@@ -25,7 +27,7 @@
                         <MudDivider Class="my-2" />
                         @foreach (var com in ApiService.OwnerCompanies)
                         {
-                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Info" Expanded="true">
+                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Info" Expanded="false">
                                 @if(com.SafeVms != null)
                                 {
                                     @foreach (var safe in com.SafeVms)
@@ -33,7 +35,7 @@
                                         <MudNavLink Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
                                     }
                                 }
-                                <MudNavLink Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать сейф</MudNavLink>
+                                <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать сейф</MudNavLink>
                             </MudNavGroup>
                         }
                         @foreach (var com in ApiService.Companies)
@@ -111,6 +113,18 @@
             StateHasChanged();
         });
     }
+
+    DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    async Task CreateSafe(Guid comId, string comName)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("comId", comId);
+        parameters.Add("comName", comName);
+
+        var dialog = await DialogService.ShowAsync<CreateSafe>("Создать сейф", parameters, maxWidth);
+    }
+
 
 
     string[] headings = { "ID", "Name", "Email" };

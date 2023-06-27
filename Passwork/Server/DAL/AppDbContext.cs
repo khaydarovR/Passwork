@@ -15,9 +15,11 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
     public DbSet<AppUser> AppUsers { get; set; }
     public DbSet<Company> Companies { get; set; }
     public DbSet<Safe> Safes { get; set; }
+    public DbSet<SafeUsers> SafeUsers {get; set;}
     public DbSet<Password> Passwords { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<PasswordTags> PasswordTags { get; set;}
+    public DbSet<ActivityLog> ActivityLogs { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -52,6 +54,8 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         safeBuilder.HasKey(c => c.Id);
         safeBuilder.HasIndex(c => c.Id).IsUnique();
         safeBuilder.Property(c => c.Title).IsRequired();
+        safeBuilder.Property(c => c.Description).IsRequired(false);
+        safeBuilder.Ignore(c => c.Company);
         safeBuilder.HasOne(c => c.Company)
             .WithMany(s => s.Safes)
             .HasForeignKey(c => c.CompanyId)

@@ -18,6 +18,7 @@ public class SafeCreateDto
 
     [MaybeNull]
     public string? Description { get; set; }
-    [Required(ErrorMessage = "Обязательное поле")]
+
+    [Required(ErrorMessage = "Не указана компания")]
     public Guid CompanyId { get; set; }
 }

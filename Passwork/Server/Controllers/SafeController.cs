@@ -24,7 +24,7 @@ namespace Passwork.Server.Controllers
         }
 
 
-        [HttpPost]
+        [HttpPost("Create")]
         [Authorize]
         public async Task<ActionResult> Create([FromBody] SafeCreateDto model)
         {
@@ -32,26 +32,25 @@ namespace Passwork.Server.Controllers
             {
                 return BadRequest("Не валидные данные");
             }
-            var id = User.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
-            var company = _context.Companies.Single(c => c.Id == model.CompanyId);
-            var owner = await _userManager.FindByIdAsync(id);
+            var claimsPrincipal = HttpContext.User;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            var setId = Guid.NewGuid();
-            await _context.Safes.AddAsync(new Safe
+            var newSafe = new Safe
             {
-                Id = setId,
                 Title = model.Title,
-                Company = company,
+                CompanyId = model.CompanyId,
                 Description = model.Description,
-            });
+            };
+            await _context.Safes.AddAsync(newSafe);
+            _context.SaveChanges();
 
-            var newSafe = await _context.Safes.SingleAsync(s => s.Id ==  setId);
-            var safeUser = new List<SafeUsers>() { new SafeUsers()
+            var safeUser = new SafeUsers()
             {
-                AppUser = owner,
+                AppUserId = Guid.Parse(id),
                 Right = Domain.RightEnum.Owner,
-                Safe = newSafe
-            } };
+                SafeId = newSafe.Id
+            };
+            await _context.SafeUsers.AddAsync(safeUser);
 
             await _context.SaveChangesAsync();
 

@@ -39,7 +39,7 @@ namespace Passwork.Server.Controllers
             }
 
             var claimsPrincipal = HttpContext.User;
-            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             await _context.Companies.AddAsync(new Company
             {
@@ -60,7 +60,7 @@ namespace Passwork.Server.Controllers
         {
             var companies = new List<Company>();
             var claimsPrincipal = HttpContext.User;
-            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             var safes = await _context.Safes
                 .Include(s => s.SafeUsers)
@@ -83,7 +83,7 @@ namespace Passwork.Server.Controllers
                 result.Add(com.MapToVm());
             }
 
-            return Ok(companies);
+            return Ok(result);
         }
 
 
@@ -92,7 +92,7 @@ namespace Passwork.Server.Controllers
         public async Task<ActionResult<List<CompaniesOwnerVm>>> OwnerCom()
         {
             var claimsPrincipal = HttpContext.User;
-            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.IsPersistent).Value;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             var companies = await _context.Companies
                 .Include(s => s.Safes)
@@ -106,7 +106,7 @@ namespace Passwork.Server.Controllers
                 result.Add(com.MapToVm());
             }
 
-            return Ok(companies);
+            return Ok(result);
         }
     }
 }
