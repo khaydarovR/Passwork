@@ -30,4 +30,13 @@ public static class MappingExtensions
         res.SafeVms = safs;
         return res;
     }
+
+    public static TagVm MapToVm(this Tag self)
+    {
+        var res = new TagVm();
+        res.Id = self.Id;
+        res.Title = self.Title;
+
+        return res;
+    }
 }

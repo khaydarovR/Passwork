@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Passwork.Server.DAL;
@@ -11,9 +12,10 @@ using Passwork.Server.DAL;
 namespace Passwork.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230628090912_UrlNullable")]
+    partial class UrlNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,7 +166,7 @@ namespace Passwork.Server.Migrations
                     b.Property<DateTime>("At")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 6, 28, 9, 47, 59, 44, DateTimeKind.Utc).AddTicks(81));
+                        .HasDefaultValue(new DateTime(2023, 6, 28, 9, 9, 12, 439, DateTimeKind.Utc).AddTicks(7315));
 
                     b.Property<Guid>("PasswordId")
                         .HasColumnType("uuid");
@@ -331,6 +333,9 @@ namespace Passwork.Server.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("TagId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.HasKey("PasswordId", "TagId");

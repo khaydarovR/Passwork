@@ -59,11 +59,4 @@
             StateHasChanged();
         }
     }
-
-    private void CreateNewSafe()
-    {
-        //In a real world scenario this bool would probably be a service to delete the item from api/database
-        Snackbar.Add("Сейф создан", Severity.Success);
-        MudDialog.Close(DialogResult.Ok(model.Title));
-    }
 }

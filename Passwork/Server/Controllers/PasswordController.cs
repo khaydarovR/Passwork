@@ -27,7 +27,7 @@ namespace Passwork.Server.Controllers
 
         [HttpPost("Create")]
         [Authorize]
-        public async Task<ActionResult> Create([FromBody] SafeCreateDto model)
+        public async Task<ActionResult> Create([FromBody] PasswordCreateDto model)
         {
             if (!ModelState.IsValid)
             {
@@ -36,25 +36,35 @@ namespace Passwork.Server.Controllers
             var claimsPrincipal = HttpContext.User;
             var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
 
-            var newSafe = new Safe
+            var newPassword = new Password
             {
                 Title = model.Title,
-                CompanyId = model.CompanyId,
-                Description = model.Description,
+                Login = model.Login,
+                Pw = model.Pw,
+                Note = model.Note,
+                SafeId = model.SafeId,
+                UseInUtl = model.UseInUrl,
+                IsDeleted = false,
             };
-            await _context.Safes.AddAsync(newSafe);
+            await _context.Passwords.AddAsync(newPassword);
             _context.SaveChanges();
 
-            var safeUser = new SafeUsers()
+            var tags = new List<Tag>();
+            foreach (var tag in model.Tags)
             {
-                AppUserId = Guid.Parse(id),
-                Right = Domain.RightEnum.Owner,
-                SafeId = newSafe.Id
-            };
-            await _context.SafeUsers.AddAsync(safeUser);
+                tags.Add(new Tag { Title = tag });
+            }
+            await _context.Tags.AddRangeAsync(tags);
+            _context.SaveChanges();
 
-            await _context.SaveChangesAsync();
-            await _apiHub.SendCompanyUpdate(id);
+            var pasTags = new List<PasswordTags>();
+            foreach (var tag in tags)
+            {
+                pasTags.Add(new PasswordTags() { PasswordId = newPassword.Id, TagId = tag.Id });
+            }
+            await _context.PasswordTags.AddRangeAsync(pasTags);
+            _context.SaveChanges();
+            
             return Ok();
         }
     }

@@ -67,6 +67,7 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         passwordBuilder.Property(c => c.Title).IsRequired();
         passwordBuilder.Property(c => c.Login).IsRequired();
         passwordBuilder.Property(c => c.Pw).IsRequired();
+        passwordBuilder.Property(c => c.UseInUtl).IsRequired(false);
         passwordBuilder.Property(c => c.Note).IsRequired(false);
         passwordBuilder.Property(c => c.IsDeleted).HasDefaultValue(false);
         passwordBuilder.HasOne(c => c.Safe)

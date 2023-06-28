@@ -9,5 +9,5 @@ namespace Passwork.Shared.ViewModels;
 public class TagVm
 {
     public Guid Id { get; set; }
-    public string Name { get; set; } = null!;
+    public string Title { get; set; } = null!;
 }

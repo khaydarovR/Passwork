@@ -14,6 +14,7 @@ public class ApiService
 
     public List<CompaniesOwnerVm> Companies { get; set; } = new();
     public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = new();
+    public List<TagVm> Tags { get; set; } = new();
 
     public ApiService(HttpClient httpClient, NavigationManager navigationManager)
     {
@@ -51,4 +52,16 @@ public class ApiService
             Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
         }
     }
+
+    public async Task LoadLinkedTags(Guid safeId)
+    {
+        var response = await _httpClient.GetAsync($"/api/Tag/Get?safeId={safeId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var res = await response.Content.ReadFromJsonAsync<List<TagVm>>();
+            Tags = res;
+        }
+    }
+    
 }

@@ -1,6 +1,6 @@
 ﻿namespace Passwork.Server.Domain.Entity;
 
-public class PasswordTags : BaseEntity
+public class PasswordTags
 {
     public Guid TagId { get; set; }
     public Tag Tag { get; set; }

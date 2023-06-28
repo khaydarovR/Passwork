@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,8 @@ public class PasswordCreateDto
     public string? Note { get; set; }
     [Display(Name = "Адрес где надо ввести эти данные")]
     public string? UseInUrl { get; set; }
+    [Required]
     public Guid SafeId { get; set; }
+    [MaybeNull]
     public List<string> Tags { get; set; }
 }
