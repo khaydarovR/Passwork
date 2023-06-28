@@ -58,6 +58,8 @@ namespace Passwork.Server.Controllers
                 result.Add(t.MapToVm());
             }
 
+            result = result.Distinct().ToList();
+
             return Ok(result);
         }
     }

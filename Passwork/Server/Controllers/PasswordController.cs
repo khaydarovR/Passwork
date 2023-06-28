@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
+using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
@@ -18,11 +19,13 @@ namespace Passwork.Server.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ApiHub _apiHub;
+        private readonly ILogger<PasswordController> _logger;
 
-        public PasswordController(AppDbContext context, ApiHub apiHub)
+        public PasswordController(AppDbContext context, ApiHub apiHub, ILogger<PasswordController> logger)
         {
-            this._context = context;
+            _context = context;
             _apiHub = apiHub;
+            _logger = logger;
         }
 
 
@@ -33,14 +36,19 @@ namespace Passwork.Server.Controllers
             {
                 return BadRequest("Не валидные данные");
             }
+            if (model.Tags?.Count > 5)
+            {
+                return BadRequest("Максимально допустимое количество тегов - 5");
+            }
             var claimsPrincipal = HttpContext.User;
             var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+            var user = await _context.AppUsers.FirstAsync(u => u.Id == Guid.Parse(id));
 
             var newPassword = new Password
             {
                 Title = model.Title,
-                Login = model.Login,
-                Pw = model.Pw,
+                Login = Encryptor.Encrypt(user.MasterPassword, model.Login),
+                Pw = Encryptor.Encrypt(user.MasterPassword, model.Pw),
                 Note = model.Note,
                 SafeId = model.SafeId,
                 UseInUtl = model.UseInUrl,
@@ -66,6 +74,7 @@ namespace Passwork.Server.Controllers
             _context.SaveChanges();
 
             await _apiHub.SendPasswordUpdate(id);
+            await AddActivityLog(ActivityNames.Created, newPassword.Id, Guid.Parse(id));
 
             return Ok();
         }
@@ -92,6 +101,21 @@ namespace Passwork.Server.Controllers
             }
 
             return Ok(result);
+        }
+
+
+        private async Task AddActivityLog(string title, Guid pwId, Guid userId)
+        {
+            var newLog = new ActivityLog()
+            {
+                AppUsreId = userId,
+                PasswordId = pwId,
+                Title = title,
+                At = DateTime.UtcNow,
+            };
+            _context.ActivityLogs.Add(newLog);
+            await _context.SaveChangesAsync();
+            _logger.LogWarning("Activity log added");
         }
     }
 }

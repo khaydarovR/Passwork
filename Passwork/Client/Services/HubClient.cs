@@ -44,7 +44,7 @@ public class HubClient
             })
             .Build();
 
-        _hubConnection.Closed += HubConnectionClosed;
+        _hubConnection.Closed += HubConnectionClosed!;
 
         _hubConnection.On(EventsEnum.CompanyUpdated.ToString(), () =>
         {
@@ -70,14 +70,6 @@ public class HubClient
 
     private async Task HubConnectionClosed(Exception ex)
     {
-        if (ex != null && ex is HubException hubException)
-        {
-            if (ex.Message == "Unauthorized")
-            {
-                _navigationManager.NavigateTo("/register");
-            }
-        }
-
         OnCloseConnection?.Invoke();
 
         await Task.CompletedTask;

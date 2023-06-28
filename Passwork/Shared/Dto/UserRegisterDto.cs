@@ -25,7 +25,7 @@ public class UserRegisterDto
 
     [Required(ErrorMessage = "Правильно заполните поле")]
     [Display(Name = "Исполльзуеться в качестве ключа для шифрования ваших данных")]
-    [StringLength(20, MinimumLength = 4, ErrorMessage = "Не достаточно символов")]
+    [StringLength(20, MinimumLength = 10, ErrorMessage = "Не достаточно символов (10!)")]
     [DataType(DataType.Password)]
     public string MasterPassword { get; set; }
 }

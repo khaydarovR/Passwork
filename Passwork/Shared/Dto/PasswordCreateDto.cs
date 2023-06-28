@@ -24,5 +24,6 @@ public class PasswordCreateDto
     [Required]
     public Guid SafeId { get; set; }
     [MaybeNull]
+    [MaxLength(5)]
     public List<string> Tags { get; set; }
 }
