@@ -71,7 +71,7 @@ public class SeedingService : ISeedingService
         {
             var res = await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.IsPersistent, user.Id.ToString()));
             var res2 = await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, RoleEmum.User.ToString()));
-            if(!res.Succeeded || !res2.Succeeded)
+            if (!res.Succeeded || !res2.Succeeded)
             {
                 _logger.LogError("Claims can not be added");
                 return;

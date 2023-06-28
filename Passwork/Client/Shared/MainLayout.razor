@@ -8,6 +8,7 @@
 @inject AuthenticationStateProvider CustomAuthStateProvider
 @inject HttpClient HttpClient
 @inject AuthenticationManager AuthManager
+@inject TokenService TokenService
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -58,6 +59,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        #warning Только для дебаг режима
+        AuthManager.Logout();
         await CustomAuthStateProvider.GetAuthenticationStateAsync();
         base.OnInitialized();
     }
@@ -81,7 +84,7 @@
 
     async void Logout()
     {
-        await AuthManager.Logout();
+        AuthManager.Logout();
         Snackbar.Add("Вы вышли с аккаунта", Severity.Warning);
     }
 }

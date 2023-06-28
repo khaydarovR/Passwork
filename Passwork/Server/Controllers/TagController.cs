@@ -1,16 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Expressions.Internal;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
-using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
-using Passwork.Shared.Dto;
 using Passwork.Shared.ViewModels;
-using System.Security.Claims;
 
 namespace Passwork.Server.Controllers
 {
@@ -43,7 +37,7 @@ namespace Passwork.Server.Controllers
                 .Select(p => p.Id)
                 .ToListAsync();
 
-            if(passwordIds.Count == 0)
+            if (passwordIds.Count == 0)
             {
                 return Ok(result);
             }
@@ -59,7 +53,7 @@ namespace Passwork.Server.Controllers
                 .Where(t => paswordTags.Contains(t.Id))
                 .ToListAsync();
 
-            foreach(var t in tags)
+            foreach (var t in tags)
             {
                 result.Add(t.MapToVm());
             }

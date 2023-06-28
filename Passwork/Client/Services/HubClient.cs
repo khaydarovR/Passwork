@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using Microsoft.AspNetCore.Http.Connections.Client;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Passwork.Client.Services;
-using System;
+using Passwork.Shared.SignalR;
 
 public class HubClient
 {
@@ -12,14 +11,17 @@ public class HubClient
     private readonly CustomAuthStateProvider _authenticationStateProvider;
     private readonly NavigationManager _navigationManager;
     private bool _isInitialized;
-
+    public event Action OnCloseConnection;
 
     public event Action OnCompanyUpdated;
+    public event Action OnPassworUpdated;
 
-    public HubClient(AuthenticationStateProvider authenticationStateProvider, NavigationManager navigationManager)
+    public HubClient(
+        AuthenticationStateProvider authenticationStateProvider, 
+        NavigationManager navigationManager)
     {
         _authenticationStateProvider = (CustomAuthStateProvider)authenticationStateProvider;
-        this._navigationManager = navigationManager;
+        _navigationManager = navigationManager;
     }
 
     public async Task StartAsync()
@@ -43,10 +45,17 @@ public class HubClient
             .Build();
 
         _hubConnection.Closed += HubConnectionClosed;
-        _hubConnection.On("CompanyUpdated", () =>
+
+        _hubConnection.On(EventsEnum.CompanyUpdated.ToString(), () =>
         {
             OnCompanyUpdated?.Invoke();
         });
+
+        _hubConnection.On(EventsEnum.PasswordUpdated.ToString(), () =>
+        {
+            OnPassworUpdated?.Invoke();
+        });
+
         try
         {
             await _hubConnection.StartAsync();
@@ -59,20 +68,17 @@ public class HubClient
         }
     }
 
-    private void ConfigureHubConnection(HttpConnectionOptions options)
-    {
-
-    }
-
     private async Task HubConnectionClosed(Exception ex)
     {
         if (ex != null && ex is HubException hubException)
         {
             if (ex.Message == "Unauthorized")
             {
-                _navigationManager.NavigateTo("/");
+                _navigationManager.NavigateTo("/register");
             }
         }
+
+        OnCloseConnection?.Invoke();
 
         await Task.CompletedTask;
     }

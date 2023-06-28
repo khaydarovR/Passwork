@@ -1,11 +1,5 @@
-using Microsoft.AspNetCore.ResponseCompression;
-using Passwork.Server.Application.Interfaces;
-using Passwork.Server.Application.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Passwork.Server.DAL;
-using Passwork.Server.Domain.Entity;
 using Passwork.Server.Application.Configure;
+using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services.SignalR;
 using System.Text.Json.Serialization;
 
@@ -48,6 +42,6 @@ app.MapFallbackToFile("index.html");
 app.MapHub<ApiHub>("/companyhub");
 
 app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(false);
-app.UseAuthentication();;
+app.UseAuthentication(); ;
 
 app.Run();

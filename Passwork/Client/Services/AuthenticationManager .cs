@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Routing;
-using Passwork.Client.Utils;
+﻿using Passwork.Client.Utils;
 using Passwork.Shared.Dto;
 using System.Net;
 using System.Net.Http.Json;
@@ -66,7 +64,7 @@ public class AuthenticationManager
             ErrorMessage = (await response.Content.ReadFromJsonAsync<ServerResponseError>())?.Message ?? "Ошибка";
             return false;
         }
-        var token = (await response.Content.ReadAsStringAsync())?? string.Empty;
+        var token = (await response.Content.ReadAsStringAsync()) ?? string.Empty;
         _authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
         await _hubClient.StartAsync();
@@ -76,7 +74,7 @@ public class AuthenticationManager
     /// <summary>
     /// Выйти из пользователя.
     /// </summary>
-    public async Task Logout()
+    public async void Logout()
     {
         await _httpClient.PostAsJsonAsync("/api/Account/Logout", true);
         await _authenticationService.DeleteTokenAsync();

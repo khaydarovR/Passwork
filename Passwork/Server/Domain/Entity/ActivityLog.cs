@@ -1,6 +1,6 @@
 ﻿namespace Passwork.Server.Domain.Entity;
 
-public class ActivityLog: BaseEntity
+public class ActivityLog : BaseEntity
 {
     public DateTime At { get; set; }
     public string Title { get; set; }

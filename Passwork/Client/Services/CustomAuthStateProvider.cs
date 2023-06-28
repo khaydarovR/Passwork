@@ -26,7 +26,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         var state = new AuthenticationState(new ClaimsPrincipal());
-        var token = await _authenticationService.GetTokenAsync(); 
+        var token = await _authenticationService.GetTokenAsync();
         if (!string.IsNullOrEmpty(token))
         {
             try

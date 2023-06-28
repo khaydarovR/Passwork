@@ -28,12 +28,12 @@
                         <MudDivider Class="my-2" />
                         @foreach (var com in ApiService.OwnerCompanies)
                         {
-                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Info" Expanded="true">
+                            <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
                                 @if(com.SafeVms != null)
                                 {
                                     @foreach (var safe in com.SafeVms)
                                     {
-                                        <MudNavLink OnClick="@(() => SelectSafe(safe.Id))" Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                        <MudNavLink OnClick="@(() => SelectSafe(safe.Id))" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Success">@safe?.Title</MudNavLink>
                                     }
                                 }
                                 <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
@@ -69,7 +69,16 @@
                         <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать пароль</MudNavLink>
                         @foreach (var pas in passwords)
                         {
-                            <MudListItem Text="@pas.Title" Icon="@Icons.Material.Filled.Key" IconColor="Color.Primary" />
+                            <MudStack Row="true">
+                                <MudListItem Style="width:300px" Text="@pas.Title" Icon="@Icons.Material.Filled.Key" IconColor="Color.Primary" />
+                                <MudSpacer/>
+                                @foreach (var mtag in pas.Tags)
+                                {
+                                    <MudPaper Class="align-self-end m-2 mb-4">
+                                        #<span> </span>@mtag.Title
+                                    </MudPaper>
+                                }
+                            </MudStack>
                         }
                     </MudList>
                 </Authorized>
@@ -113,6 +122,17 @@
         });
     }
 
+    private void HandlePasswordUpdated()
+    {
+        // Обновление списка паролей при получении обновлений
+        InvokeAsync(async () =>
+        {
+            await ApiService.LoadLinkedPasswords(currentSafe);
+            passwords = ApiService.Passwords;
+            StateHasChanged();
+        });
+    }
+
     DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
     async Task CreateSafe(Guid comId, string comName)
@@ -134,9 +154,15 @@
 
     async Task SelectSafe(Guid safeId)
     {
-        currentSafe = safeId;
-        passwords.Add(new() { Title = "1c бух" });
-        //TO DO
-        //Load safe passwords
+        var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
+        var authenticated = await provider.GetAuthenticationStateAsync();
+        bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
+        if ((isAuthenticated is not null) && isAuthenticated == true)
+        {
+            currentSafe = safeId;
+            await ApiService.LoadLinkedPasswords(safeId);
+            passwords = ApiService.Passwords;
+            HubClient.OnPassworUpdated += HandlePasswordUpdated;
+        }
     }
 }

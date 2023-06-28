@@ -1,14 +1,13 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Generic;
+using Passwork.Shared.SignalR;
 using System.Diagnostics;
 using System.Security.Claims;
 
 namespace Passwork.Server.Application.Services.SignalR;
 
 [Authorize]
-public class ApiHub: Microsoft.AspNetCore.SignalR.Hub
+public class ApiHub : Microsoft.AspNetCore.SignalR.Hub
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -62,6 +61,12 @@ public class ApiHub: Microsoft.AspNetCore.SignalR.Hub
     public async Task SendCompanyUpdate(string userId)
     {
         var ids = Storage.ConnectedUsers[userId];
-        await Clients.Clients(ids).SendAsync("CompanyUpdated");
+        await Clients.Clients(ids).SendAsync(EventsEnum.CompanyUpdated.ToString());
+    }
+
+    public async Task SendPasswordUpdate(string userId)
+    {
+        var ids = Storage.ConnectedUsers[userId];
+        await Clients.Clients(ids).SendAsync(EventsEnum.PasswordUpdated.ToString());
     }
 }

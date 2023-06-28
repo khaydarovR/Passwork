@@ -1,18 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain.Entity;
+using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
+using Passwork.Shared.ViewModels;
 using System.Security.Claims;
 
 namespace Passwork.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PasswordController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -26,7 +27,6 @@ namespace Passwork.Server.Controllers
 
 
         [HttpPost("Create")]
-        [Authorize]
         public async Task<ActionResult> Create([FromBody] PasswordCreateDto model)
         {
             if (!ModelState.IsValid)
@@ -34,7 +34,7 @@ namespace Passwork.Server.Controllers
                 return BadRequest("Не валидные данные");
             }
             var claimsPrincipal = HttpContext.User;
-            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
 
             var newPassword = new Password
             {
@@ -64,8 +64,34 @@ namespace Passwork.Server.Controllers
             }
             await _context.PasswordTags.AddRangeAsync(pasTags);
             _context.SaveChanges();
-            
+
+            await _apiHub.SendPasswordUpdate(id);
+
             return Ok();
+        }
+
+
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<List<PasswordVm>>> Get([FromQuery] Guid safeId)
+        {
+            if (safeId == Guid.Empty)
+            {
+                return BadRequest("Не указан id сейфа");
+            }
+            var result = new List<PasswordVm>();
+
+            var passwords = await _context.Passwords
+                .Include(p => p.PasswordTags)
+                .ThenInclude(p => p.Tag)
+                .Where(p => p.SafeId == safeId)
+                .ToListAsync();
+
+            foreach (var p in passwords)
+            {
+                result.Add(p.MapToVm());
+            }
+
+            return Ok(result);
         }
     }
 }

@@ -15,6 +15,7 @@ public class ApiService
     public List<CompaniesOwnerVm> Companies { get; set; } = new();
     public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = new();
     public List<TagVm> Tags { get; set; } = new();
+    public List<PasswordVm> Passwords { get; set; } = new();
 
     public ApiService(HttpClient httpClient, NavigationManager navigationManager)
     {
@@ -25,7 +26,7 @@ public class ApiService
     public async Task<bool> PostDataAsync<T>(string url, T data)
     {
         var response = await _httpClient.PostAsJsonAsync(url, data);
-        
+
         return response.IsSuccessStatusCode;
     }
 
@@ -63,5 +64,17 @@ public class ApiService
             Tags = res;
         }
     }
-    
+
+    public async Task LoadLinkedPasswords(Guid safeId)
+    {
+        var response = await _httpClient.GetAsync($"/api/Password/GetAll?safeId={safeId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var res = await response.Content.ReadFromJsonAsync<List<PasswordVm>>();
+            Passwords = res;
+        }
+    }
+
+
 }
