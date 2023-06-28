@@ -74,7 +74,7 @@ public class AuthenticationManager
     /// <summary>
     /// Выйти из пользователя.
     /// </summary>
-    public async void Logout()
+    public async Task Logout()
     {
         await _httpClient.PostAsJsonAsync("/api/Account/Logout", true);
         await _authenticationService.DeleteTokenAsync();

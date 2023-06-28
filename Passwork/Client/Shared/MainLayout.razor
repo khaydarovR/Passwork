@@ -82,9 +82,9 @@
         DialogService.Show(typeof(CreateCom), "Создание новой компании", options);
     }
 
-    async void Logout()
+    async Task Logout()
     {
-        AuthManager.Logout();
+        await AuthManager.Logout();
         Snackbar.Add("Вы вышли с аккаунта", Severity.Warning);
     }
 }

@@ -9,7 +9,6 @@ public class ApiService
 {
     private readonly HttpClient _httpClient;
     private readonly NavigationManager _navigationManager;
-    private readonly HubConnection _hubConnection;
     public event Action OnCompanyUpdated;
 
     public List<CompaniesOwnerVm> Companies { get; set; } = new();
@@ -40,7 +39,7 @@ public class ApiService
         var response = await _httpClient.GetAsync("/api/Company/OwnerCom");
         if (response.IsSuccessStatusCode)
         {
-            OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
+            OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>()?? new List<CompaniesOwnerVm>();
         }
     }
 
@@ -50,7 +49,7 @@ public class ApiService
 
         if (response.IsSuccessStatusCode)
         {
-            Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>();
+            Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>()?? new List<CompaniesOwnerVm>();
         }
     }
 
@@ -60,7 +59,7 @@ public class ApiService
 
         if (response.IsSuccessStatusCode)
         {
-            var res = await response.Content.ReadFromJsonAsync<List<TagVm>>();
+            var res = await response.Content.ReadFromJsonAsync<List<TagVm>>() ?? new List<TagVm>();
             Tags = res;
         }
     }
@@ -71,7 +70,7 @@ public class ApiService
 
         if (response.IsSuccessStatusCode)
         {
-            var res = await response.Content.ReadFromJsonAsync<List<PasswordVm>>();
+            var res = await response.Content.ReadFromJsonAsync<List<PasswordVm>>()?? new List<PasswordVm>();
             Passwords = res;
         }
     }

@@ -1,8 +1,11 @@
-﻿namespace Passwork.Shared.ViewModels;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Passwork.Shared.ViewModels;
 
 public class PasswordVm
 {
     public Guid Id { get; set; }
-    public string Title { get; set; }
+    [Required]
+    public string Title { get; set; } = string.Empty;
     public List<TagVm> Tags { get; set; } = new();
 }
