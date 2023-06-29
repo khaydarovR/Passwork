@@ -16,7 +16,7 @@
 <MudGrid>
     <MudItem xs="12">
         <MudPaper Class="d-flex align-center justify-left mud-width-full py-2 mt-4">
-            <MudText Typo="Typo.h6" Class="px-4"> / ComPas / @currentComName / Пароль  </MudText>
+            <MudText Typo="Typo.h6" Class="px-4"> / ComPas / @currentComName / @currentSafeName / Пароль  </MudText>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="2">
@@ -68,10 +68,15 @@
             <AuthorizeView>
                 <Authorized>
                     <MudList Clickable="true">
-                        <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать пароль</MudNavLink>
+                        @if (currentSafe != Guid.Empty)
+                        {
+                            <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
+                                Создать пароль
+                            </MudNavLink>
+                        }
                         @foreach (var pas in passwords)
                         {
-                            <MudListItem @onclick="@(() => PwDetail(pas.Id))">
+                            <MudListItem @onclick="@(() => LoadPwDetail(pas.Id))">
                                 <MudText Typo="Typo.h6">
                                     <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Key"></MudIcon>
                                     @pas.Title
@@ -81,6 +86,7 @@
                                     <MudChip OnClick="@(() => {return;})" Color="Color.Default">@mtag.Title</MudChip>
                                 }
                             </MudListItem>
+                            <MudDivider/>
                         }
                     </MudList>
                 </Authorized>
@@ -93,14 +99,35 @@
     <MudItem xs="12" sm="6">
         <AuthorizeView>
             <Authorized>
-                <MudCard Outlined="false" Class="d-flex align-right  mud-width-full py-8">
-                    <MudCardContent>
-                        <MudText>Story of the day</MudText>
-                        <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.asdasd</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
-                    </MudCardActions>
+                <MudCard Outlined="false" Class="d-flex align-left  mud-width-full py-8">
+                    @if(isLoadPwDetail != null && isLoadPwDetail == true){
+                        <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                    }
+                    @if(isLoadPwDetail == false)
+                    {
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudIconButton Icon="@PasswordInputIcon" OnClick="HidenPw" Color="Color.Primary" />
+                                <MudIconButton Icon="@Icons.Material.Filled.History" Color="Color.Primary" />
+                            </MudItem>
+                            <MudItem xs="12" Class="ms-5 ps-5">
+                                <MudTextField @bind-Value="@pwDetial.Title" Label="Название"/>
+                                <MudTextField @bind-Value="@pwDetial.Login"
+                                              Label="Логин"
+                                              Variant="Variant.Text"
+                                              InputType="@PasswordInput" />
+                                <MudTextField @bind-Value="@pwDetial.Pw"
+                                              Label="Пароль"
+                                              Variant="Variant.Text"
+                                              InputType="@PasswordInput" />
+                                <MudTextField @bind-Value="@pwDetial.Note" Label="Заметка"/>
+                                <MudTextField @bind-Value="@pwDetial.UseInUtl" Label="Для ресурса"/>
+                                <MudCheckBox @bind-Checked="@pwDetial.IsDeleted" Label="Удален?"/>
+
+                                <MudButton Variant="Variant.Text" Color="Color.Primary">Сохранить изминения</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    }
                 </MudCard>
             </Authorized>
             <NotAuthorized>
@@ -113,6 +140,7 @@
 
 @code {
     private Guid currentSafe;
+    private bool? isLoadPwDetail;
     private string currentSafeName = string.Empty;
     private string currentComName = string.Empty;
     private List<PasswordVm> passwords = new();
@@ -174,12 +202,15 @@
         var dialog = await DialogService.ShowAsync<CreatePassword>("Создать пароль", parameters, maxWidth);
     }
 
-    async Task PwDetail(Guid id)
+    async Task LoadPwDetail(Guid id)
     {
+        isLoadPwDetail = true;
+        StateHasChanged();
         var response = await ApiService.LoadPasswordDetail(id);
         if(response == null)
         {
             pwDetial = ApiService.PasswordDetail;
+            isLoadPwDetail = false;
             StateHasChanged();
         }
         else
@@ -190,6 +221,7 @@
 
     async Task SelectSafe(Guid safeId, string safeName, string comName)
     {
+        HidenPw();
         var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
         var authenticated = await provider.GetAuthenticationStateAsync();
         bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
@@ -201,6 +233,25 @@
             await ApiService.LoadLinkedPasswords(safeId);
             passwords = ApiService.Passwords;
             HubClient.OnPassworUpdated += HandlePasswordUpdated;
+        }
+    }
+
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    void HidenPw()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
         }
     }
 }
