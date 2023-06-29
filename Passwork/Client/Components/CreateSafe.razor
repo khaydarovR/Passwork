@@ -10,7 +10,6 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-            <MudTextField Value="@comId" Label="ID компании" ReadOnly="true" />
             <MudTextField @bind-Value="@model.Title" For="@(() => model.Title)" Label="Название" />
             <MudTextField @bind-Value="@model.Description" For="@(() => model.Description)" Label="Описание" />
     </DialogContent>

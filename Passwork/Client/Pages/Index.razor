@@ -15,11 +15,11 @@
 
 <MudGrid>
     <MudItem xs="12">
-        <MudPaper Class="d-flex align-center justify-center mud-width-full py-2 mt-4">
-            <MudText Typo="Typo.h6" Class="px-4">/ Компания / Сейф / </MudText>
+        <MudPaper Class="d-flex align-center justify-left mud-width-full py-2 mt-4">
+            <MudText Typo="Typo.h6" Class="px-4"> / ComPas / @currentComName / Пароль  </MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="12" sm="2">
         <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
             <AuthorizeView>
                 <Authorized>
@@ -33,7 +33,9 @@
                                 {
                                     @foreach (var safe in com.SafeVms)
                                     {
-                                        <MudNavLink OnClick="@(() => SelectSafe(safe.Id))" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                        <MudNavLink OnClick="@(() => SelectSafe(safe.Id, safe.Title, com.Name))" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Success">
+                                            @safe?.Title
+                                        </MudNavLink>
                                     }
                                 }
                                 <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
@@ -61,7 +63,7 @@
             </AuthorizeView>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="9">
+    <MudItem xs="12" sm="4">
         <MudPaper Class="d-flex align-right justify-right mud-width-full py-8">
             <AuthorizeView>
                 <Authorized>
@@ -69,16 +71,16 @@
                         <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">Создать пароль</MudNavLink>
                         @foreach (var pas in passwords)
                         {
-                            <MudStack Row="true">
-                                <MudListItem OnClick="@(() => PwDetail(pas.Id))" Style="width:300px" Text="@pas.Title" Icon="@Icons.Material.Filled.Key" IconColor="Color.Primary" />
-                                <MudSpacer/>
+                            <MudListItem @onclick="@(() => PwDetail(pas.Id))">
+                                <MudText Typo="Typo.h6">
+                                    <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Key"></MudIcon>
+                                    @pas.Title
+                                </MudText>
                                 @foreach (var mtag in pas.Tags)
                                 {
-                                    <MudPaper @onclick="@(() => {return;})" Class="align-self-end m-2 mb-4">
-                                        #<span> </span>@mtag.Title
-                                    </MudPaper>
+                                    <MudChip OnClick="@(() => {return;})" Color="Color.Default">@mtag.Title</MudChip>
                                 }
-                            </MudStack>
+                            </MudListItem>
                         }
                     </MudList>
                 </Authorized>
@@ -88,11 +90,31 @@
             </AuthorizeView>
         </MudPaper>
     </MudItem>
+    <MudItem xs="12" sm="6">
+        <AuthorizeView>
+            <Authorized>
+                <MudCard Outlined="false" Class="d-flex align-right  mud-width-full py-8">
+                    <MudCardContent>
+                        <MudText>Story of the day</MudText>
+                        <MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.asdasd</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </Authorized>
+            <NotAuthorized>
+                <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudItem>
 </MudGrid>
 
 
 @code {
     private Guid currentSafe;
+    private string currentSafeName = string.Empty;
+    private string currentComName = string.Empty;
     private List<PasswordVm> passwords = new();
     private PasswordDetailVm pwDetial;
 
@@ -166,7 +188,7 @@
         }
     }
 
-    async Task SelectSafe(Guid safeId)
+    async Task SelectSafe(Guid safeId, string safeName, string comName)
     {
         var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
         var authenticated = await provider.GetAuthenticationStateAsync();
@@ -174,6 +196,8 @@
         if ((isAuthenticated is not null) && isAuthenticated == true)
         {
             currentSafe = safeId;
+            currentSafeName = safeName;
+            currentComName = comName;
             await ApiService.LoadLinkedPasswords(safeId);
             passwords = ApiService.Passwords;
             HubClient.OnPassworUpdated += HandlePasswordUpdated;
