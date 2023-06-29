@@ -15,6 +15,7 @@ public class ApiService
     public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = new();
     public List<TagVm> Tags { get; set; } = new();
     public List<PasswordVm> Passwords { get; set; } = new();
+    public PasswordDetailVm PasswordDetail { get; set; } = new();
 
     public ApiService(HttpClient httpClient, NavigationManager navigationManager)
     {
@@ -75,5 +76,21 @@ public class ApiService
         }
     }
 
+    public async Task<string> LoadPasswordDetail(Guid pwId)
+    {
+        var response = await _httpClient.GetAsync($"/api/Password/Detail?pwId={pwId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var res = await response.Content.ReadFromJsonAsync<PasswordDetailVm>() ?? new PasswordDetailVm();
+            PasswordDetail = res;
+            return null;
+        }
+        else
+        {
+            var error = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage() { Message = "Не известная ошибка"};
+            return error.Message;
+        }
+    }
 
 }

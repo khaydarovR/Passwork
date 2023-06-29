@@ -87,7 +87,6 @@ public class AccountService : IAccountService
         {
             Email = model.Email,
             UserName = model.Email,
-            //UserState = await _context.UserState.FirstAsync(s => s.State == StateEnum.Active),
             EmailConfirmed = false,
             MasterPassword = model.MasterPassword,
             CreatedDate = DateTime.UtcNow,

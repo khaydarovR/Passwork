@@ -87,6 +87,8 @@ namespace Passwork.Server.Controllers
             {
                 return BadRequest("Не указан id сейфа");
             }
+
+
             var result = new List<PasswordVm>();
 
             var passwords = await _context.Passwords
@@ -103,6 +105,46 @@ namespace Passwork.Server.Controllers
             return Ok(result);
         }
 
+
+        [HttpGet("Detail")]
+        public async Task<ActionResult<PasswordDetailVm>> Detail([FromQuery] Guid pwId)
+        {
+            if (pwId == Guid.Empty)
+            {
+                return BadRequest(new ErrorMessage { Message = "Не выбран пароль"});
+            }
+            var result = new PasswordDetailVm();
+
+            var safeId = (await _context.Passwords
+                .SingleAsync(p => p.Id == pwId)).SafeId;
+
+            var claimsPrincipal = HttpContext.User;
+            var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+            var right = await _context.SafeUsers
+                .Where(su => su.AppUserId == Guid.Parse(userId))
+                .Where(su => su.SafeId == safeId)
+                .Select(su => su.Right)
+                .SingleAsync();
+
+            if ((int)right < (int)RightEnum.Read)
+            {
+                return BadRequest(new ErrorMessage { Message = "Не достаточно прав"});
+            }
+
+            var passwordDetail = await _context.Passwords
+                .Include(p => p.PasswordTags)
+                .ThenInclude(p => p.Tag)
+                .SingleAsync(p => p.Id == pwId);
+
+            var masterPw = await _context.AppUsers
+                .Where(u => u.Id == Guid.Parse(userId))
+                .Select(u => u.MasterPassword)
+                .SingleAsync();
+            result = passwordDetail.MapToDetailVm(masterPw);
+
+            return Ok(result);
+        }
 
         private async Task AddActivityLog(string title, Guid pwId, Guid userId)
         {

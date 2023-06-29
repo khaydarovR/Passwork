@@ -70,11 +70,11 @@
                         @foreach (var pas in passwords)
                         {
                             <MudStack Row="true">
-                                <MudListItem Style="width:300px" Text="@pas.Title" Icon="@Icons.Material.Filled.Key" IconColor="Color.Primary" />
+                                <MudListItem OnClick="@(() => PwDetail(pas.Id))" Style="width:300px" Text="@pas.Title" Icon="@Icons.Material.Filled.Key" IconColor="Color.Primary" />
                                 <MudSpacer/>
                                 @foreach (var mtag in pas.Tags)
                                 {
-                                    <MudPaper Class="align-self-end m-2 mb-4">
+                                    <MudPaper @onclick="@(() => {return;})" Class="align-self-end m-2 mb-4">
                                         #<span> </span>@mtag.Title
                                     </MudPaper>
                                 }
@@ -92,9 +92,9 @@
 
 
 @code {
-
     private Guid currentSafe;
     private List<PasswordVm> passwords = new();
+    private PasswordDetailVm pwDetial;
 
 
     protected override async Task OnInitializedAsync()
@@ -150,6 +150,20 @@
         parameters.Add("SafeId", currentSafe);
 
         var dialog = await DialogService.ShowAsync<CreatePassword>("Создать пароль", parameters, maxWidth);
+    }
+
+    async Task PwDetail(Guid id)
+    {
+        var response = await ApiService.LoadPasswordDetail(id);
+        if(response == null)
+        {
+            pwDetial = ApiService.PasswordDetail;
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add(response, Severity.Warning);
+        }
     }
 
     async Task SelectSafe(Guid safeId)

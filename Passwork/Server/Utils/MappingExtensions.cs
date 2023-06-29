@@ -52,4 +52,25 @@ public static class MappingExtensions
 
         return res;
     }
+
+    public static PasswordDetailVm MapToDetailVm(this Password self, string masterPw)
+    {
+        var res = new PasswordDetailVm();
+        res.Id = self.Id;
+        res.Title = self.Title;
+        res.Login = Encryptor.Decrypt(masterPw ,self.Login);
+        res.Pw = Encryptor.Decrypt(masterPw ,self.Pw);
+        res.Note = self.Note;
+        res.UseInUtl = self.UseInUtl;
+        res.IsDeleted = self.IsDeleted;
+        res.SafeId = self.SafeId;
+        res.Tags = new List<TagVm>();
+
+        foreach (var pw in self.PasswordTags)
+        {
+            res.Tags.Add(pw.Tag.MapToVm());
+        }
+
+        return res;
+    }
 }
