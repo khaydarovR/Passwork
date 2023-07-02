@@ -11,11 +11,12 @@ public class ApiService
     private readonly NavigationManager _navigationManager;
     public event Action OnCompanyUpdated;
 
-    public List<CompaniesOwnerVm> Companies { get; set; } = new();
-    public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = new();
+    public List<CompaniesOwnerVm> Companies { get; set; } = null!;
+    public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = null!;
     public List<TagVm> Tags { get; set; } = new();
     public List<PasswordVm> Passwords { get; set; } = new();
     public PasswordDetailVm PasswordDetail { get; set; } = new();
+    public List<SafeUserVm> SafeUsers { get; private set; }
 
     public ApiService(HttpClient httpClient, NavigationManager navigationManager)
     {
@@ -40,6 +41,7 @@ public class ApiService
         var response = await _httpClient.GetAsync("/api/Company/OwnerCom");
         if (response.IsSuccessStatusCode)
         {
+            OwnerCompanies = new();
             OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>()?? new List<CompaniesOwnerVm>();
         }
     }
@@ -50,6 +52,7 @@ public class ApiService
 
         if (response.IsSuccessStatusCode)
         {
+            Companies = new();
             Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>()?? new List<CompaniesOwnerVm>();
         }
     }
@@ -93,4 +96,20 @@ public class ApiService
         }
     }
 
+    public async Task<string> LoadSafeUsers(Guid safeId)
+    {
+        var response = await _httpClient.GetAsync($"/api/Safe/Users?safeId={safeId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var res = await response.Content.ReadFromJsonAsync<List<SafeUserVm>>() ?? new List<SafeUserVm>();
+            SafeUsers = res;
+            return null;
+        }
+        else
+        {
+            var error = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage() { Message = "Не известная ошибка" };
+            return error.Message;
+        }
+    }
 }

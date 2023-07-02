@@ -1,6 +1,8 @@
-﻿namespace Passwork.Server.Domain.Entity;
+﻿using Passwork.Shared.ViewModels;
 
-public class SafeUsers : BaseEntity
+namespace Passwork.Server.Domain.Entity;
+
+public class SafeUsers
 {
     public Guid AppUserId { get; set; }
     public AppUser AppUser { get; set; }

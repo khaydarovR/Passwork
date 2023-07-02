@@ -63,7 +63,10 @@ public class HubClient
         }
         catch
         {
-            _navigationManager.NavigateTo("/", true);
+            if((await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.IsAuthenticated == false)
+            {
+                _navigationManager.NavigateTo("/register", true);
+            }
             _isInitialized = false;
         }
     }

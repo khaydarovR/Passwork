@@ -73,4 +73,18 @@ public static class MappingExtensions
 
         return res;
     }
+
+
+    public static SafeUserVm MapToVm(this SafeUsers self)
+    {
+        var res = new SafeUserVm();
+
+        res.Email = self.AppUser.Email;
+        res.UserId = self.AppUserId;
+        res.Right = self.Right;
+        res.RightDescription = string.Empty;
+
+        return res;
+    }
+
 }

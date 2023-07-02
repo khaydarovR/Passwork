@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2070F9E9-C0D7-4699-B9A7-FC39B8C0BBE5}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\Downloads\pascom.drawio.png = ..\..\..\Downloads\pascom.drawio.png
+		Questions.txt = Questions.txt
 	EndProjectSection
 EndProject
 Global

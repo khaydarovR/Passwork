@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
-using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
@@ -63,7 +62,7 @@ namespace Passwork.Server.Controllers
 
             var safes = await _context.Safes
                 .Include(s => s.SafeUsers)
-                .Where(s => s.SafeUsers.Any(u => u.Id == Guid.Parse(id)))
+                .Where(s => s.SafeUsers.Any(u => u.AppUserId == Guid.Parse(id)))
                 .Where(s => s.SafeUsers.Any(su => su.Right == RightEnum.Owner))
                 .ToListAsync();
 

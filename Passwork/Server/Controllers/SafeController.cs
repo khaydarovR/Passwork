@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain.Entity;
+using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
+using Passwork.Shared.ViewModels;
 using System.Security.Claims;
+
 
 namespace Passwork.Server.Controllers
 {
@@ -45,7 +49,7 @@ namespace Passwork.Server.Controllers
             var safeUser = new SafeUsers()
             {
                 AppUserId = Guid.Parse(id),
-                Right = Domain.RightEnum.Owner,
+                Right = RightEnum.Owner,
                 SafeId = newSafe.Id
             };
             await _context.SafeUsers.AddAsync(safeUser);
@@ -53,6 +57,31 @@ namespace Passwork.Server.Controllers
             await _context.SaveChangesAsync();
             await _apiHub.SendCompanyUpdate(id);
             return Ok();
+        }
+
+
+        [HttpGet("Users")]
+        [Authorize]
+        public async Task<ActionResult<List<SafeUserVm>>> Users([FromQuery] Guid safeId)
+        {
+            if (safeId == Guid.Empty)
+            {
+                return BadRequest("Не указан id сейфа");
+            }
+
+            var result = new List<SafeUserVm>();
+
+            var safeUsers = await _context.SafeUsers
+                .Include(s => s.AppUser)
+                .Where(s => s.SafeId == safeId)
+                .ToListAsync();
+
+            foreach (var su in safeUsers)
+            {
+                result.Add(su.MapToVm());
+            }
+
+            return Ok(result);
         }
     }
 }

@@ -1,0 +1,128 @@
+﻿@page "/rights/{SafeId:guid}"
+@attribute [Authorize]
+@using Passwork.Client.Components;
+@using Passwork.Shared.ViewModels;
+@using System.Runtime.CompilerServices;
+@using System.ComponentModel;
+@using System.Net.Http.Json
+
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject ApiService ApiService
+@inject HubClient HubClient
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Rights</PageTitle>
+
+<MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+    <AuthorizeView>
+        <Authorized>
+            <MudGrid>
+                <MudItem xs="12" sm="4">
+                    Навигация
+                </MudItem>
+                
+                <MudItem xs="12" sm="8">
+                        <div style="min-width:200px;">
+                            <MudText Inline="true" Class="align-self-center">Выбран: @selectedUser?.Email</MudText>
+                        </div>
+                    <MudTable Items="@safeUsers" Dense="false" Hover="true" Bordered="false" Striped="false" 
+                        Filter="new Func<SafeUserVm,bool>(FilterFunc1)" @bind-SelectedItem="selectedUser">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Поиск по элементам</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" 
+                            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Id</MudTh>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Права</MudTh>
+                            <MudTh>Описание права</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="table">
+                            <MudTd DataLabel="Nr">@(table.UserId.ToString()[..3])...@(table.UserId.ToString()[^3..])</MudTd>
+                            <MudTd DataLabel="Email">@table.Email</MudTd>
+                            <MudTd DataLabel="Rights">@table.Right.ToString()</MudTd>
+                            <MudTd DataLabel="Description">@table.RightDescription</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager InfoFormat=""/>
+                        </PagerContent>
+                    </MudTable>
+                </MudItem>
+            </MudGrid>
+        </Authorized>
+        <NotAuthorized>
+            <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudPaper>
+
+
+@code {
+    [Parameter]
+    public Guid SafeId {get; set;}
+
+    private string resonseError = null!;
+    private string searchString { get; set; } = string.Empty;
+    private List<SafeUserVm> safeUsers = new();
+    private SafeUserVm selectedUser = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FindLinkedUsers();
+        StateHasChanged();
+    }
+
+
+    async Task FindLinkedUsers()
+    {
+        var response = await ApiService.LoadSafeUsers(SafeId);
+        if (response == null)
+        {
+            safeUsers = ApiService.SafeUsers;
+        }
+        else
+        {
+            resonseError = response;
+        }
+    }
+
+    private bool FilterFunc1(SafeUserVm element) => FilterFunc(element, searchString);
+    private bool FilterFunc(SafeUserVm element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Right.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{element.Email} {element.Right.ToString()}".Contains(searchString))
+            return true;
+        return false;
+    }
+
+    private void HandleCompanyUpdated()
+    {
+        // Обновление списка компаний при получении обновлений
+        InvokeAsync(async () =>
+        {
+            await ApiService.LoadOwnerCom();
+            await ApiService.LoadLinkedCom();
+            StateHasChanged();
+        });
+    }
+
+    private void HandlePasswordUpdated()
+    {
+        // Обновление списка паролей при получении обновлений
+        InvokeAsync(async () =>
+        {
+
+        });
+    }
+
+}

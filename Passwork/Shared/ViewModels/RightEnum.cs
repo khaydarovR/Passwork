@@ -1,4 +1,4 @@
-﻿namespace Passwork.Server.Domain;
+﻿namespace Passwork.Shared.ViewModels;
 
 public enum RightEnum
 {
