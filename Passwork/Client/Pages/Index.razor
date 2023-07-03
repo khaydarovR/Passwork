@@ -188,7 +188,7 @@
 
     void OpenRightsMangerPage(Guid safeId)
     {
-        ApiService.NavigateTo($"/rights/{safeId}");
+        ApiService.NavigateTo($"/rights/{currentSafeName}/{safeId}");
     }
 
     private void HandleCompanyUpdated()

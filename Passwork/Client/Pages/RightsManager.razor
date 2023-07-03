@@ -1,4 +1,4 @@
-﻿@page "/rights/{SafeId:guid}"
+﻿@page "/rights/{SafeName}/{SafeId:guid}"
 @attribute [Authorize]
 @using Passwork.Client.Components;
 @using Passwork.Shared.ViewModels;
@@ -21,17 +21,51 @@
         <Authorized>
             <MudGrid>
                 <MudItem xs="12" sm="4">
-                    Навигация
+                    <MudTextField @bind-Value="globalSearch" Placeholder="Email" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.PersonSearch" IconSize="Size.Medium" AdornmentColor="Color.Primary"></MudTextField>
+                    <MudButton @onclick="TrySendInvite">Найти и выдать права для сейфа</MudButton>
+
+                    <MudPaper>
+                        <MudList Clickable="true">
+                            @if(companyUsers is not null)
+                            {
+                                <MudText Typo="Typo.h6">Другие пользователи компании:</MudText>
+                                @foreach (var item in companyUsers)
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.Person">
+                                        @item.Email <MudChip Color="Color.Success" @onclick="@(() => AddUserFromSafe(@item.Email))" 
+                                            Icon="@Icons.Material.Filled.ArrowRight">Дать доступ</MudChip>
+                                    </MudListItem>
+                                }
+                            }
+                            else
+                            {
+                                <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                            }
+                        </MudList>
+                    </MudPaper>
+
                 </MudItem>
                 
                 <MudItem xs="12" sm="8">
-                        <div style="min-width:200px;">
-                            <MudText Inline="true" Class="align-self-center">Выбран: @selectedUser?.Email</MudText>
-                        </div>
-                    <MudTable Items="@safeUsers" Dense="false" Hover="true" Bordered="false" Striped="false" 
+                        <MudText Inline="true" Class="align-self-center">Выбран: @selectedUser?.Email</MudText>
+                        @if(selectedUser is not null)
+                        {
+                            <MudSelect @bind-Value="@selectedUser.Right" T="RightEnumVm" Label="Уровень доступа" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                <MudSelectItem Value="@RightEnumVm.Отсутствует" />
+                                <MudSelectItem Value="@RightEnumVm.Смотреть" />
+                                <MudSelectItem Value="@RightEnumVm.Читать" />
+                                <MudSelectItem Value="@RightEnumVm.Записывать" />
+                                <MudSelectItem Value="@RightEnumVm.Приглашать" />
+                                <MudSelectItem Value="@RightEnumVm.Удалять" />
+                                <MudSelectItem Value="@RightEnumVm.Владелец" />
+                            </MudSelect>
+                        }
+                    <MudSpacer/>
+                    <MudTable Class="mt-5" Items="@safeUsers" Dense="false" Hover="true" Bordered="false" Striped="false" 
                         Filter="new Func<SafeUserVm,bool>(FilterFunc1)" @bind-SelectedItem="selectedUser">
                         <ToolBarContent>
-                            <MudText Typo="Typo.h6">Поиск по элементам</MudText>
+                            <MudText Typo="Typo.h4">Сейф - @SafeName</MudText>
                             <MudSpacer />
                             <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" 
                             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
@@ -40,13 +74,11 @@
                             <MudTh>Id</MudTh>
                             <MudTh>Email</MudTh>
                             <MudTh>Права</MudTh>
-                            <MudTh>Описание права</MudTh>
                         </HeaderContent>
                         <RowTemplate Context="table">
                             <MudTd DataLabel="Nr">@(table.UserId.ToString()[..3])...@(table.UserId.ToString()[^3..])</MudTd>
                             <MudTd DataLabel="Email">@table.Email</MudTd>
                             <MudTd DataLabel="Rights">@table.Right.ToString()</MudTd>
-                            <MudTd DataLabel="Description">@table.RightDescription</MudTd>
                         </RowTemplate>
                         <PagerContent>
                             <MudTablePager InfoFormat=""/>
@@ -65,15 +97,19 @@
 @code {
     [Parameter]
     public Guid SafeId {get; set;}
+    [Parameter]
+    public string SafeName { get; set; }
 
-    private string resonseError = null!;
     private string searchString { get; set; } = string.Empty;
+    private string globalSearch { get; set; } = string.Empty;
     private List<SafeUserVm> safeUsers = new();
     private SafeUserVm selectedUser = null;
+    private List<ComUserVm> companyUsers;
 
     protected override async Task OnInitializedAsync()
     {
         await FindLinkedUsers();
+        await FindCompanyUsers();
         StateHasChanged();
     }
 
@@ -87,7 +123,58 @@
         }
         else
         {
-            resonseError = response;
+            Snackbar.Add(response, Severity.Error);
+        }
+    }
+
+    async Task FindCompanyUsers()
+    {
+        var responseMessage = await ApiService.LoadComUsers(SafeId);
+        if (responseMessage == null)
+        {
+            companyUsers = ApiService.ComUsers;
+        }
+        else
+        {
+            Snackbar.Add(responseMessage, Severity.Error);
+        }
+    }
+
+    async Task TrySendInvite()
+    {
+        var model = new AddUserToSafeDto()
+            {
+                Right = RightEnumVm.Смотреть,
+                UserEmail = globalSearch,
+                SafeId = SafeId
+            };
+        var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
+        if(response == false)
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("В сейф добавлен новый пользователь", Severity.Success);
+        }
+    }
+
+    async Task AddUserFromSafe(string email)
+    {
+        var model = new AddUserToSafeDto()
+            {
+                Right = RightEnumVm.Смотреть,
+                UserEmail = email,
+                SafeId = SafeId
+            };
+        var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
+        if (response == false)
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("В сейф добавлен новый пользователь", Severity.Success);
         }
     }
 
@@ -104,25 +191,4 @@
             return true;
         return false;
     }
-
-    private void HandleCompanyUpdated()
-    {
-        // Обновление списка компаний при получении обновлений
-        InvokeAsync(async () =>
-        {
-            await ApiService.LoadOwnerCom();
-            await ApiService.LoadLinkedCom();
-            StateHasChanged();
-        });
-    }
-
-    private void HandlePasswordUpdated()
-    {
-        // Обновление списка паролей при получении обновлений
-        InvokeAsync(async () =>
-        {
-
-        });
-    }
-
 }

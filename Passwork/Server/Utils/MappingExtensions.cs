@@ -1,4 +1,5 @@
-﻿using Passwork.Server.Domain.Entity;
+﻿using Passwork.Server.Domain;
+using Passwork.Server.Domain.Entity;
 using Passwork.Shared.ViewModels;
 
 namespace Passwork.Server.Utils;
@@ -81,10 +82,45 @@ public static class MappingExtensions
 
         res.Email = self.AppUser.Email;
         res.UserId = self.AppUserId;
-        res.Right = self.Right;
-        res.RightDescription = string.Empty;
+        res.Right = self.Right.MapToVm();
 
         return res;
     }
 
+    public static RightEnumVm MapToVm(this RightEnum self) =>
+    self switch
+    {
+        RightEnum.None => RightEnumVm.Отсутствует,
+        RightEnum.Visible => RightEnumVm.Смотреть,
+        RightEnum.Read => RightEnumVm.Читать,
+        RightEnum.Write => RightEnumVm.Записывать,
+        RightEnum.Invite => RightEnumVm.Приглашать,
+        RightEnum.Delete => RightEnumVm.Удалять,
+        RightEnum.Owner => RightEnumVm.Владелец,
+        _ => throw new ArgumentOutOfRangeException(nameof(self), self, "Неизвестное значение перечисления RightEnum")
+    };
+
+    public static RightEnum MapToEnum(this RightEnumVm self) =>
+    self switch
+    {
+        RightEnumVm.Отсутствует => RightEnum.None,
+        RightEnumVm.Смотреть => RightEnum.Visible,
+        RightEnumVm.Читать => RightEnum.Read,
+        RightEnumVm.Записывать => RightEnum.Write,
+        RightEnumVm.Приглашать => RightEnum.Invite,
+        RightEnumVm.Удалять => RightEnum.Delete,
+        RightEnumVm.Владелец => RightEnum.Owner,
+        _ => throw new ArgumentOutOfRangeException(nameof(self), self, "Неизвестное значение перечисления RightEnumVm")
+    };
+
+    public static ComUserVm MapToComUserVm(this AppUser self)
+    {
+        var res = new ComUserVm();
+
+        res.Email = self.Email;
+        res.Id = self.Id;
+
+        return res;
+    }
+    
 }

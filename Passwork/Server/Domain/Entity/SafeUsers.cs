@@ -1,6 +1,4 @@
-﻿using Passwork.Shared.ViewModels;
-
-namespace Passwork.Server.Domain.Entity;
+﻿namespace Passwork.Server.Domain.Entity;
 
 public class SafeUsers
 {

@@ -1,4 +1,4 @@
-﻿namespace Passwork.Shared.ViewModels;
+﻿namespace Passwork.Server.Domain;
 
 public enum RightEnum
 {
@@ -6,6 +6,7 @@ public enum RightEnum
     Visible,
     Read,
     Write,
+    Invite,
     Delete,
     Owner
 }

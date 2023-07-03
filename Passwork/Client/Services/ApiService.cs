@@ -10,13 +10,14 @@ public class ApiService
     private readonly HttpClient _httpClient;
     private readonly NavigationManager _navigationManager;
     public event Action OnCompanyUpdated;
-
+    public ErrorMessage CurrentErrorMessage = new();
     public List<CompaniesOwnerVm> Companies { get; set; } = null!;
     public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = null!;
     public List<TagVm> Tags { get; set; } = new();
     public List<PasswordVm> Passwords { get; set; } = new();
     public PasswordDetailVm PasswordDetail { get; set; } = new();
     public List<SafeUserVm> SafeUsers { get; private set; }
+    public List<ComUserVm> ComUsers { get; private set; }
 
     public ApiService(HttpClient httpClient, NavigationManager navigationManager)
     {
@@ -27,6 +28,10 @@ public class ApiService
     public async Task<bool> PostDataAsync<T>(string url, T data)
     {
         var response = await _httpClient.PostAsJsonAsync(url, data);
+        if(response.IsSuccessStatusCode == false)
+        {
+            CurrentErrorMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>()?? new ErrorMessage { Message = "Ошибка"};
+        }
 
         return response.IsSuccessStatusCode;
     }
@@ -104,6 +109,23 @@ public class ApiService
         {
             var res = await response.Content.ReadFromJsonAsync<List<SafeUserVm>>() ?? new List<SafeUserVm>();
             SafeUsers = res;
+            return null;
+        }
+        else
+        {
+            var error = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage() { Message = "Не известная ошибка" };
+            return error.Message;
+        }
+    }
+
+    public async Task<string> LoadComUsers(Guid safeId)
+    {
+        var response = await _httpClient.GetAsync($"/api/Company/Users?safeId={safeId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var res = await response.Content.ReadFromJsonAsync<List<ComUserVm>>() ?? new List<ComUserVm>();
+            ComUsers = res;
             return null;
         }
         else

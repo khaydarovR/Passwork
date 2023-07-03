@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
+using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
@@ -14,6 +15,7 @@ namespace Passwork.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class SafeController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -27,7 +29,6 @@ namespace Passwork.Server.Controllers
 
 
         [HttpPost("Create")]
-        [Authorize]
         public async Task<ActionResult> Create([FromBody] SafeCreateDto model)
         {
             if (!ModelState.IsValid)
@@ -49,7 +50,7 @@ namespace Passwork.Server.Controllers
             var safeUser = new SafeUsers()
             {
                 AppUserId = Guid.Parse(id),
-                Right = RightEnum.Owner,
+                Right = Domain.RightEnum.Owner,
                 SafeId = newSafe.Id
             };
             await _context.SafeUsers.AddAsync(safeUser);
@@ -61,7 +62,6 @@ namespace Passwork.Server.Controllers
 
 
         [HttpGet("Users")]
-        [Authorize]
         public async Task<ActionResult<List<SafeUserVm>>> Users([FromQuery] Guid safeId)
         {
             if (safeId == Guid.Empty)
@@ -82,6 +82,62 @@ namespace Passwork.Server.Controllers
             }
 
             return Ok(result);
+        }
+
+
+        [HttpPost("AddUser")]
+        public async Task<ActionResult> AddUser([FromBody] AddUserToSafeDto addUserToSafeDto)
+        {
+            var newSafeUser = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.Email == addUserToSafeDto.UserEmail);
+            if (newSafeUser == null)
+            {
+                return BadRequest(new ErrorMessage { Message = $"Пользователь c почтой {addUserToSafeDto.UserEmail} не зарегистрирован" });
+            }
+
+
+            var claimsPrincipal = HttpContext.User;
+            var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+            var rightCurentUser = await _context.SafeUsers
+                .Where(su => su.AppUserId == Guid.Parse(userId))
+                .Where(su => su.SafeId == addUserToSafeDto.SafeId)
+                .Select(su => su.Right)
+                .SingleAsync();
+
+            if (rightCurentUser < RightEnum.Invite)
+            {
+                return BadRequest(new ErrorMessage { Message = "Не достаточно прав для добавления новых пользователей в сэйф" });
+            }
+            if (addUserToSafeDto.Right >= RightEnumVm.Владелец)
+            {
+                return BadRequest(new ErrorMessage { Message = "У сейфа может быть только один владелец" });
+            }
+            if (rightCurentUser <= addUserToSafeDto.Right.MapToEnum())
+            {
+                return BadRequest(new ErrorMessage { Message = "Вы не можете предоставить другим пользователям более высокий уровень доступа, чем у вас" });
+            }
+
+            var checkExist = await _context.SafeUsers
+                .Where(su => su.AppUserId == newSafeUser.Id)
+                .Where(su => su.SafeId == addUserToSafeDto.SafeId)
+                .AnyAsync();
+
+            if(checkExist)
+            {
+                return BadRequest(new ErrorMessage { Message = "Данный пользователь уже прикреплен к сейфу" });
+            }
+
+            await _context.SafeUsers.AddAsync(new SafeUsers()
+            {
+                AppUserId = newSafeUser.Id,
+                SafeId = addUserToSafeDto.SafeId,
+                Right = addUserToSafeDto.Right.MapToEnum()
+            });
+
+            //hub send signal
+            await _context.SaveChangesAsync();
+            return Ok();
         }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
+using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
@@ -13,6 +14,7 @@ namespace Passwork.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CompanyController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -27,7 +29,6 @@ namespace Passwork.Server.Controllers
         }
 
 
-        [Authorize]
         [HttpPost("Create")]
         public async Task<ActionResult> Create([FromBody] CompanyCreateDto model)
         {
@@ -53,7 +54,6 @@ namespace Passwork.Server.Controllers
 
 
         [HttpGet("GetAll")]
-        [Authorize]
         public async Task<ActionResult<List<CompaniesOwnerVm>>> GetAll()
         {
             var companies = new List<Company>();
@@ -86,7 +86,6 @@ namespace Passwork.Server.Controllers
 
 
         [HttpGet("OwnerCom")]
-        [Authorize]
         public async Task<ActionResult<List<CompaniesOwnerVm>>> OwnerCom()
         {
             var claimsPrincipal = HttpContext.User;
@@ -102,6 +101,42 @@ namespace Passwork.Server.Controllers
             foreach (var com in companies)
             {
                 result.Add(com.MapToVm());
+            }
+
+            return Ok(result);
+        }
+
+
+        [HttpGet("Users")]
+        public async Task<ActionResult<List<ComUserVm>>> Users([FromQuery] Guid safeId)
+        {
+            var currentSafeId = safeId;
+            //Получение связанной компании с сэйфом - получение всех сейфов компании - получение всех пользователей связанныз с сейфами
+            if (currentSafeId == Guid.Empty)
+            {
+                return BadRequest(new ErrorMessage() { Message = "Не указан id сейфа" });
+            }
+
+            var comId = await _context.Safes
+                .Where(s => s.Id == currentSafeId)
+                .Select(s => s.CompanyId)
+                .SingleAsync();
+
+            var safeIds = await _context.Companies
+                .Where(c => c.Id == comId)
+                .SelectMany(c => c.Safes.Select(s => s.Id))
+                .ToListAsync();
+
+
+            var users = await _context.AppUsers
+                .Include(u => u.SafeUsers)
+                .Where(u => u.SafeUsers.Any(su => safeIds.Contains(su.SafeId)))
+                .ToListAsync();
+
+            var result = new List<ComUserVm>();
+            foreach (var u in users)
+            {
+                result.Add(u.MapToComUserVm());
             }
 
             return Ok(result);
