@@ -1,0 +1,45 @@
+﻿@using Passwork.Shared.ViewModels;
+
+
+<MudDialog>
+    <DialogContent>
+        <MudSelect @bind-Value="@newRightForUsers" T="RightEnumVm" Label="Уровень доступа" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            <MudSelectItem Value="@RightEnumVm.Отсутствует" />
+            <MudSelectItem Value="@RightEnumVm.Смотреть" />
+            <MudSelectItem Value="@RightEnumVm.Читать" />
+            <MudSelectItem Value="@RightEnumVm.Записывать" />
+            <MudSelectItem Value="@RightEnumVm.Приглашать" />
+            <MudSelectItem Value="@RightEnumVm.Удалять" />
+            <MudSelectItem Value="@RightEnumVm.Владелец" />
+        </MudSelect>
+        
+        <MudList>
+            <MudText>Выбранные пользователи</MudText>
+            @foreach (var user in SafeUsers)
+            {
+                <MudListItem>
+                    @user.Email @(user.UserId.ToString()[..3])...@(user.UserId.ToString()[^3..])
+                </MudListItem>
+                <MudDivider></MudDivider>
+            }
+        </MudList>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Cancel()">Отмена</MudButton>
+        <MudButton Color="Color.Warning" OnClick="UpdateRights">Приминить изминения для выбранных пользователей</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public HashSet<SafeUserVm> SafeUsers { get; set; }
+
+    private RightEnumVm newRightForUsers;
+
+    async Task UpdateRights()
+    {
+        // api/safe/updateRights
+    }
+}

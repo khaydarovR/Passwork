@@ -15,9 +15,9 @@ public static class MappingExtensions
         };
     }
 
-    public static CompaniesOwnerVm MapToVm(this Company self)
+    public static CompaniesVm MapToVm(this Company self)
     {
-        var res = new CompaniesOwnerVm();
+        var res = new CompaniesVm();
         res.Id = self.Id;
         res.Name = self.Name;
 

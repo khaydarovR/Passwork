@@ -54,7 +54,7 @@ namespace Passwork.Server.Controllers
 
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<List<CompaniesOwnerVm>>> GetAll()
+        public async Task<ActionResult<List<CompaniesVm>>> GetAll()
         {
             var companies = new List<Company>();
             var claimsPrincipal = HttpContext.User;
@@ -63,7 +63,7 @@ namespace Passwork.Server.Controllers
             var safes = await _context.Safes
                 .Include(s => s.SafeUsers)
                 .Where(s => s.SafeUsers.Any(u => u.AppUserId == Guid.Parse(id)))
-                .Where(s => s.SafeUsers.Any(su => su.Right == RightEnum.Owner))
+                .Where(s => s.SafeUsers.Any(su => su.Right != RightEnum.Owner))
                 .ToListAsync();
 
             foreach (var safe in safes)
@@ -75,7 +75,7 @@ namespace Passwork.Server.Controllers
                 }
             }
 
-            var result = new List<CompaniesOwnerVm>();
+            var result = new List<CompaniesVm>();
             foreach (var com in companies)
             {
                 result.Add(com.MapToVm());
@@ -86,7 +86,7 @@ namespace Passwork.Server.Controllers
 
 
         [HttpGet("OwnerCom")]
-        public async Task<ActionResult<List<CompaniesOwnerVm>>> OwnerCom()
+        public async Task<ActionResult<List<CompaniesVm>>> OwnerCom()
         {
             var claimsPrincipal = HttpContext.User;
             var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -97,7 +97,7 @@ namespace Passwork.Server.Controllers
                 .ToListAsync();
 
 
-            var result = new List<CompaniesOwnerVm>();
+            var result = new List<CompaniesVm>();
             foreach (var com in companies)
             {
                 result.Add(com.MapToVm());

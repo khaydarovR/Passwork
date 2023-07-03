@@ -11,8 +11,8 @@ public class ApiService
     private readonly NavigationManager _navigationManager;
     public event Action OnCompanyUpdated;
     public ErrorMessage CurrentErrorMessage = new();
-    public List<CompaniesOwnerVm> Companies { get; set; } = null!;
-    public List<CompaniesOwnerVm> OwnerCompanies { get; set; } = null!;
+    public List<CompaniesVm> Companies { get; set; } = null!;
+    public List<CompaniesVm> OwnerCompanies { get; set; } = null!;
     public List<TagVm> Tags { get; set; } = new();
     public List<PasswordVm> Passwords { get; set; } = new();
     public PasswordDetailVm PasswordDetail { get; set; } = new();
@@ -47,7 +47,7 @@ public class ApiService
         if (response.IsSuccessStatusCode)
         {
             OwnerCompanies = new();
-            OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>()?? new List<CompaniesOwnerVm>();
+            OwnerCompanies = await response.Content.ReadFromJsonAsync<List<CompaniesVm>>()?? new List<CompaniesVm>();
         }
     }
 
@@ -58,7 +58,7 @@ public class ApiService
         if (response.IsSuccessStatusCode)
         {
             Companies = new();
-            Companies = await response.Content.ReadFromJsonAsync<List<CompaniesOwnerVm>>()?? new List<CompaniesOwnerVm>();
+            Companies = await response.Content.ReadFromJsonAsync<List<CompaniesVm>>()?? new List<CompaniesVm>();
         }
     }
 

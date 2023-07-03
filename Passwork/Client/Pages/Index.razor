@@ -19,15 +19,15 @@
             <MudText Typo="Typo.h6" Class="px-4"> / ComPas / @currentComName / @currentSafeName / @pwDetial?.Title  </MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="2">
+    <MudItem xs="12" sm="3">
         <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
             <AuthorizeView>
                 <Authorized>
                     <MudNavMenu Class="mud-width-full">
-                        <MudText Typo="Typo.h6" Class="px-4">Компании</MudText>
-                        <MudDivider Class="my-2" />
                         @if(ApiService.OwnerCompanies is not null)
                         {
+                            <MudText Typo="Typo.h6" Class="px-1">Ваши Компании</MudText>
+                            <MudDivider Class="my-2" />
                             @foreach (var com in ApiService.OwnerCompanies)
                             {
                                 <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
@@ -50,7 +50,8 @@
                         {
                             <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
                         }
-
+                        <MudText Typo="Typo.h6" Class="px-1">Прикреплены</MudText>
+                        <MudDivider Class="my-2" />
                         @if(ApiService.Companies is not null)
                         {
                             @foreach (var com in ApiService.Companies)
@@ -70,6 +71,14 @@
                         {
                             <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
                         }
+                        @if (showLeaveAlert)
+                        {
+                            <MudAlert Severity="Severity.Info" ShowCloseIcon CloseIconClicked="CloseMe">Владелец сейфа должен вас пригласить через кнопку "Управление доступом"</MudAlert>
+                        }
+                        @if(ApiService.Companies?.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Warning">Вас ещё не пригласисли :(</MudAlert>
+                        }
                     </MudNavMenu>
                 </Authorized>
                 <NotAuthorized>
@@ -78,7 +87,7 @@
             </AuthorizeView>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="4">
+    <MudItem xs="12" sm="3">
         <MudPaper Class="d-flex align-right justify-right mud-width-full py-8">
             <AuthorizeView>
                 <Authorized>
@@ -185,6 +194,11 @@
         }
     }
 
+    bool showLeaveAlert = true;
+    private void CloseMe()
+    {
+        showLeaveAlert = false;
+    }
 
     void OpenRightsMangerPage(Guid safeId)
     {

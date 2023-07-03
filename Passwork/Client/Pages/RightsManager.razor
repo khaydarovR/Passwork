@@ -20,69 +20,59 @@
     <AuthorizeView>
         <Authorized>
             <MudGrid>
-                <MudItem xs="12" sm="4">
-                    <MudTextField @bind-Value="globalSearch" Placeholder="Email" Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.PersonSearch" IconSize="Size.Medium" AdornmentColor="Color.Primary"></MudTextField>
-                    <MudButton @onclick="TrySendInvite">Найти и выдать права для сейфа</MudButton>
+                <MudItem xs="12" sm="5">
+                    <MudText Typo="Typo.h6" Class="ms-1">Пользователи компани</MudText>
+                    <MudDivider />
+                    <MudTable Class="mt-5" Items="@companyUsers" Dense="false" Hover="true" Bordered="false" Striped="false"
+                              Filter="new Func<ComUserVm,bool>(FilterComUsers)" @bind-SelectedItem="selectedComUser">
 
-                    <MudPaper>
-                        <MudList Clickable="true">
-                            @if(companyUsers is not null)
-                            {
-                                <MudText Typo="Typo.h6">Другие пользователи компании:</MudText>
-                                @foreach (var item in companyUsers)
-                                {
-                                    <MudListItem Icon="@Icons.Material.Filled.Person">
-                                        @item.Email <MudChip Color="Color.Success" @onclick="@(() => AddUserFromSafe(@item.Email))" 
-                                            Icon="@Icons.Material.Filled.ArrowRight">Дать доступ</MudChip>
-                                    </MudListItem>
-                                }
-                            }
-                            else
-                            {
-                                <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
-                            }
-                        </MudList>
-                    </MudPaper>
+                        <ToolBarContent>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="globalSearch" Placeholder="Поиск" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="ms-1"></MudTextField>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => TrySendInvite(globalSearch))">Глобальный поиск</MudButton>
+                        </ToolBarContent>
+                        <RowTemplate Context="table">
+                            <MudTd DataLabel="Email">@table.Email</MudTd>
+                            <MudTd DataLabel="Btn">
+                                <MudChip OnClick="@(() => TrySendInvite(table.Email))" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Warning">Добавить</MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager HideRowsPerPage InfoFormat="" />
+                        </PagerContent>
+                    </MudTable>
 
                 </MudItem>
                 
-                <MudItem xs="12" sm="8">
-                        <MudText Inline="true" Class="align-self-center">Выбран: @selectedUser?.Email</MudText>
-                        @if(selectedUser is not null)
+                <MudItem xs="12" sm="7">
+                        @if(selectedSafeUsers.Count > 0)
                         {
-                            <MudSelect @bind-Value="@selectedUser.Right" T="RightEnumVm" Label="Уровень доступа" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                                <MudSelectItem Value="@RightEnumVm.Отсутствует" />
-                                <MudSelectItem Value="@RightEnumVm.Смотреть" />
-                                <MudSelectItem Value="@RightEnumVm.Читать" />
-                                <MudSelectItem Value="@RightEnumVm.Записывать" />
-                                <MudSelectItem Value="@RightEnumVm.Приглашать" />
-                                <MudSelectItem Value="@RightEnumVm.Удалять" />
-                                <MudSelectItem Value="@RightEnumVm.Владелец" />
-                            </MudSelect>
+                            <MudButton Color="Color.Warning" @onclick="OpenRightEditor">Настроить права (@selectedSafeUsers.Count)</MudButton>
+                        }
+                        @if (selectedSafeUsers.Count == 0)
+                        {
+                            <MudButton Disabled Color="Color.Warning" @onclick="OpenRightEditor">Настроить права (@selectedSafeUsers.Count)</MudButton>
                         }
                     <MudSpacer/>
                     <MudTable Class="mt-5" Items="@safeUsers" Dense="false" Hover="true" Bordered="false" Striped="false" 
-                        Filter="new Func<SafeUserVm,bool>(FilterFunc1)" @bind-SelectedItem="selectedUser">
+                        Filter="new Func<SafeUserVm,bool>(FilterSafeUser)" MultiSelection @bind-SelectedItems="selectedSafeUsers">
                         <ToolBarContent>
                             <MudText Typo="Typo.h4">Сейф - @SafeName</MudText>
                             <MudSpacer />
-                            <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" 
+                            <MudTextField @bind-Value="searchString" Placeholder="Поиск" Adornment="Adornment.Start" 
                             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                         </ToolBarContent>
                         <HeaderContent>
                             <MudTh>Id</MudTh>
                             <MudTh>Email</MudTh>
-                            <MudTh>Права</MudTh>
+                            <MudTh>Права<MudIconButton OnClick="OpenPrompt" Icon="@Icons.Material.Rounded.Info" Color="Color.Info"></MudIconButton></MudTh>
                         </HeaderContent>
                         <RowTemplate Context="table">
                             <MudTd DataLabel="Nr">@(table.UserId.ToString()[..3])...@(table.UserId.ToString()[^3..])</MudTd>
                             <MudTd DataLabel="Email">@table.Email</MudTd>
                             <MudTd DataLabel="Rights">@table.Right.ToString()</MudTd>
                         </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager InfoFormat=""/>
-                        </PagerContent>
                     </MudTable>
                 </MudItem>
             </MudGrid>
@@ -94,7 +84,7 @@
 </MudPaper>
 
 
-@code {
+    @code {
     [Parameter]
     public Guid SafeId {get; set;}
     [Parameter]
@@ -102,9 +92,13 @@
 
     private string searchString { get; set; } = string.Empty;
     private string globalSearch { get; set; } = string.Empty;
+
     private List<SafeUserVm> safeUsers = new();
-    private SafeUserVm selectedUser = null;
+    private HashSet<SafeUserVm> selectedSafeUsers = new();
+
     private List<ComUserVm> companyUsers;
+    private ComUserVm selectedComUser = null;
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,6 +107,22 @@
         StateHasChanged();
     }
 
+    async Task OpenRightEditor()
+    {
+        var maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var parameters = new DialogParameters();
+        parameters.Add("SafeUsers", selectedSafeUsers);
+
+        var dialog = await DialogService.ShowAsync<EditRight>("Изминение прав пользователей", parameters, maxWidth);
+    }
+
+    async Task OpenPrompt()
+    {
+        var maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<RightPrompt>("Описание уровней доступа", maxWidth);
+    }
 
     async Task FindLinkedUsers()
     {
@@ -140,12 +150,12 @@
         }
     }
 
-    async Task TrySendInvite()
+    async Task TrySendInvite(string email)
     {
         var model = new AddUserToSafeDto()
             {
                 Right = RightEnumVm.Смотреть,
-                UserEmail = globalSearch,
+                UserEmail = email,
                 SafeId = SafeId
             };
         var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
@@ -178,16 +188,25 @@
         }
     }
 
-    private bool FilterFunc1(SafeUserVm element) => FilterFunc(element, searchString);
-    private bool FilterFunc(SafeUserVm element, string searchString)
+    private bool FilterSafeUser(SafeUserVm element) => FilterFuncSafeUsers(element, searchString);
+    private bool FilterComUsers(ComUserVm element) => FilterFuncComUsers(element, globalSearch);
+    private bool FilterFuncSafeUsers(SafeUserVm element, string search)
     {
-        if (string.IsNullOrWhiteSpace(searchString))
+        if (string.IsNullOrWhiteSpace(search))
             return true;
-        if (element.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.Email.Contains(search, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (element.Right.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.Right.ToString().Contains(search, StringComparison.OrdinalIgnoreCase))
             return true;
-        if ($"{element.Email} {element.Right.ToString()}".Contains(searchString))
+        if ($"{element.Email} {element.Right.ToString()}".Contains(search))
+            return true;
+        return false;
+    }
+    private bool FilterFuncComUsers(ComUserVm element, string globalsearch)
+    {
+        if (string.IsNullOrWhiteSpace(globalsearch))
+            return true;
+        if (element.Email.Contains(globalsearch, StringComparison.OrdinalIgnoreCase))
             return true;
         return false;
     }

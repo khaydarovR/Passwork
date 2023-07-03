@@ -1,6 +1,6 @@
 ﻿namespace Passwork.Shared.ViewModels;
 
-public class CompaniesOwnerVm
+public class CompaniesVm
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
