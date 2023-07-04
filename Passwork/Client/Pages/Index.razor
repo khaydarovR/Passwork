@@ -187,6 +187,7 @@
             await ApiService.LoadOwnerCom();
             await ApiService.LoadLinkedCom();
             HubClient.OnCompanyUpdated += HandleCompanyUpdated;
+            HubClient.OnSafeUsersUpdated += HandleCompanyUpdated;
             StateHasChanged();
         }
     }
@@ -211,7 +212,6 @@
             await ApiService.LoadLinkedCom();
             StateHasChanged();
         });
-        StateHasChanged();
     }
 
     private void HandlePasswordUpdated()

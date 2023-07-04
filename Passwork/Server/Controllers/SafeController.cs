@@ -142,7 +142,6 @@ namespace Passwork.Server.Controllers
 
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, newSafeUser.Id.ToString());
-            await _apiHub.SendSignal(EventsEnum.CompanyUpdated, newSafeUser.Id.ToString());
 
             return Ok();
         }
@@ -194,7 +193,6 @@ namespace Passwork.Server.Controllers
             var editedUserIds = users.Select(u => u.AppUserId).ToList();
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
-            await _apiHub.SendSignalRange(EventsEnum.CompanyUpdated, editedUserIds);
 
             return Ok();
         }
