@@ -1,4 +1,5 @@
-﻿using Passwork.Server.Domain;
+﻿using Microsoft.IdentityModel.Tokens;
+using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Shared.ViewModels;
 
@@ -6,16 +7,21 @@ namespace Passwork.Server.Utils;
 
 public static class MappingExtensions
 {
-    public static SafeVm MapToVm(this Safe self)
+    public static SafeVm MapToVm(this Safe self, Guid userId)
     {
+        if (self.SafeUsers.IsNullOrEmpty())
+        {
+            throw new NullReferenceException("Для маппинга требуется прикрепить к сейфу их пользователей");
+        }
         return new()
         {
             Id = self.Id,
-            Title = self.Title
+            Title = self.Title,
+            RightInThisSafe = self.SafeUsers.Where(su => su.AppUserId == userId).Single(s => (s.SafeId == self.Id)).Right.MapToVm(),
         };
     }
 
-    public static CompaniesVm MapToVm(this Company self)
+    public static CompaniesVm MapToVm(this Company self, Guid userId)
     {
         var res = new CompaniesVm();
         res.Id = self.Id;
@@ -24,7 +30,8 @@ public static class MappingExtensions
         var safs = new List<SafeVm>();
         foreach (var s in self.Safes)
         {
-            safs.Add(s.MapToVm());
+            if(s.SafeUsers.FirstOrDefault(su => su.AppUserId == userId) == null) { continue; }
+            safs.Add(s.MapToVm(userId));
         }
         res.SafeVms = safs;
         return res;

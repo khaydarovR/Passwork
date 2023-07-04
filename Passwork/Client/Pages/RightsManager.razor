@@ -98,12 +98,25 @@
 
     private List<ComUserVm> companyUsers;
     private ComUserVm selectedComUser = null;
-    
+
 
     protected override async Task OnInitializedAsync()
     {
         await FindLinkedUsers();
         await FindCompanyUsers();
+        HubClient.OnSafeUsersUpdated += HandleSafeUsersUpdated;
+        HubClient.OnCompanyUpdated += HandleSafeUsersUpdated;
+        StateHasChanged();
+    }
+
+    private void HandleSafeUsersUpdated()
+    {
+        // Обновление списка пользователей в сейфе или их прав при получении сигнала от сервера
+        InvokeAsync(async () =>
+        {
+            await FindLinkedUsers();
+            await FindCompanyUsers();
+        });
         StateHasChanged();
     }
 
@@ -113,8 +126,12 @@
 
         var parameters = new DialogParameters();
         parameters.Add("SafeUsers", selectedSafeUsers);
-
+        parameters.Add("SafeId", SafeId);
+        globalSearch = "";
+        searchString = "";
         var dialog = await DialogService.ShowAsync<EditRight>("Изминение прав пользователей", parameters, maxWidth);
+        selectedSafeUsers = new();
+        StateHasChanged();
     }
 
     async Task OpenPrompt()
@@ -135,6 +152,7 @@
         {
             Snackbar.Add(response, Severity.Error);
         }
+        StateHasChanged();
     }
 
     async Task FindCompanyUsers()

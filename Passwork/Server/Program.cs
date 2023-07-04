@@ -41,7 +41,7 @@ app.MapFallbackToFile("index.html");
 
 app.MapHub<ApiHub>("/companyhub");
 
-app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(false);
+//app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DropCreateDb();
 app.UseAuthentication(); ;
 
 app.Run();

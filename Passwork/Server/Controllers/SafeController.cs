@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passwork.Server.Application.Services.SignalR;
@@ -7,6 +8,7 @@ using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
+using Passwork.Shared.SignalR;
 using Passwork.Shared.ViewModels;
 using System.Security.Claims;
 
@@ -56,7 +58,8 @@ namespace Passwork.Server.Controllers
             await _context.SafeUsers.AddAsync(safeUser);
 
             await _context.SaveChangesAsync();
-            await _apiHub.SendCompanyUpdate(id);
+
+            await _apiHub.SendSignal(EventsEnum.CompanyUpdated, id);
             return Ok();
         }
 
@@ -66,7 +69,7 @@ namespace Passwork.Server.Controllers
         {
             if (safeId == Guid.Empty)
             {
-                return BadRequest("Не указан id сейфа");
+                return BadRequest( new ErrorMessage { Message = "Не указан id сейфа" });
             }
 
             var result = new List<SafeUserVm>();
@@ -135,8 +138,64 @@ namespace Passwork.Server.Controllers
                 Right = addUserToSafeDto.Right.MapToEnum()
             });
 
-            //hub send signal
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
+
+            await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
+            await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, newSafeUser.Id.ToString());
+            await _apiHub.SendSignal(EventsEnum.CompanyUpdated, newSafeUser.Id.ToString());
+
+            return Ok();
+        }
+
+
+        [HttpPost("DeleteUsers")]
+        public async Task<ActionResult<List<SafeUserVm>>> DeleteUsers([FromBody] DeleteUsersFromSafeDto usersForDelete)
+        {
+            if (usersForDelete.SafeId == Guid.Empty)
+            {
+                return BadRequest("Не указан id сейфа");
+            }
+
+            var claimsPrincipal = HttpContext.User;
+            var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+            var rightCurentUser = await _context.SafeUsers
+                .Where(su => su.AppUserId == Guid.Parse(userId))
+                .Where(su => su.SafeId == usersForDelete.SafeId)
+                .Select(su => su.Right)
+                .SingleAsync();
+
+            if (rightCurentUser < RightEnum.Delete)
+            {
+                return BadRequest(new ErrorMessage { Message = "Не достаточно прав для удаления пользователей из сейфа" });
+            }
+            if (usersForDelete.UserIds.Contains(Guid.Parse(userId)))
+            {
+                return BadRequest(new ErrorMessage { Message = "Вы не можете самоуничтожиться в сейфе :)" });
+            }
+
+            var users = await _context.SafeUsers
+                .Where(su => (su.SafeId == usersForDelete.SafeId && usersForDelete.UserIds.Contains(su.AppUserId)))
+                .ToListAsync();
+
+            if(users.Contains(users.FirstOrDefault(su => su.Right == RightEnum.Owner)))
+            {
+                return BadRequest(new ErrorMessage { Message = "Нельзя удалить владельца сейфа" });
+            }
+            if (users.Count() == 0)
+            {
+                return BadRequest(new ErrorMessage { Message = "Указанные пользователи не найдены в сейфе" });
+            }
+
+            _context.SafeUsers.RemoveRange(users);
+            _context.SaveChanges();
+
+
+            var editedUserIds = users.Select(u => u.AppUserId).ToList();
+            await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
+            await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
+            await _apiHub.SendSignalRange(EventsEnum.CompanyUpdated, editedUserIds);
+
             return Ok();
         }
     }

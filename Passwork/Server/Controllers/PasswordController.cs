@@ -7,6 +7,7 @@ using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
+using Passwork.Shared.SignalR;
 using Passwork.Shared.ViewModels;
 using System.Security.Claims;
 
@@ -73,7 +74,7 @@ namespace Passwork.Server.Controllers
             await _context.PasswordTags.AddRangeAsync(pasTags);
             _context.SaveChanges();
 
-            await _apiHub.SendPasswordUpdate(id);
+            await _apiHub.SendSignal(EventsEnum.PasswordUpdated, id);
             await AddActivityLog(ActivityNames.Created, newPassword.Id, Guid.Parse(id));
 
             return Ok();

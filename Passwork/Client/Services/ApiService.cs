@@ -32,9 +32,9 @@ public class ApiService
         {
             CurrentErrorMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>()?? new ErrorMessage { Message = "Ошибка"};
         }
-
         return response.IsSuccessStatusCode;
     }
+
 
     public void NavigateTo(string url)
     {
@@ -51,7 +51,7 @@ public class ApiService
         }
     }
 
-    public async Task LoadLinkedCom()
+    public async Task<string> LoadLinkedCom()
     {
         var response = await _httpClient.GetAsync("/api/Company/GetAll");
 
@@ -59,6 +59,12 @@ public class ApiService
         {
             Companies = new();
             Companies = await response.Content.ReadFromJsonAsync<List<CompaniesVm>>()?? new List<CompaniesVm>();
+            return null;
+        }
+        else
+        {
+            var error = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage() { Message = "Не известная ошибка" };
+            return error.Message;
         }
     }
 
@@ -108,6 +114,7 @@ public class ApiService
         if (response.IsSuccessStatusCode)
         {
             var res = await response.Content.ReadFromJsonAsync<List<SafeUserVm>>() ?? new List<SafeUserVm>();
+            SafeUsers = new();
             SafeUsers = res;
             return null;
         }

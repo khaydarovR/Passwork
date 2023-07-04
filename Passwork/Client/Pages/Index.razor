@@ -71,13 +71,10 @@
                         {
                             <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
                         }
+
                         @if (showLeaveAlert)
                         {
                             <MudAlert Severity="Severity.Info" ShowCloseIcon CloseIconClicked="CloseMe">Владелец сейфа должен вас пригласить через кнопку "Управление доступом"</MudAlert>
-                        }
-                        @if(ApiService.Companies?.Count == 0)
-                        {
-                            <MudAlert Severity="Severity.Warning">Вас ещё не пригласисли :(</MudAlert>
                         }
                     </MudNavMenu>
                 </Authorized>
@@ -187,9 +184,9 @@
         if ((isAuthenticated is not null) && isAuthenticated == true)
         {
             await HubClient.StartAsync();
-            HubClient.OnCompanyUpdated += HandleCompanyUpdated;
             await ApiService.LoadOwnerCom();
             await ApiService.LoadLinkedCom();
+            HubClient.OnCompanyUpdated += HandleCompanyUpdated;
             StateHasChanged();
         }
     }
@@ -214,6 +211,7 @@
             await ApiService.LoadLinkedCom();
             StateHasChanged();
         });
+        StateHasChanged();
     }
 
     private void HandlePasswordUpdated()

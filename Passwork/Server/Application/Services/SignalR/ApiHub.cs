@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using MudBlazor;
 using Passwork.Shared.SignalR;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -10,10 +11,12 @@ namespace Passwork.Server.Application.Services.SignalR;
 public class ApiHub : Microsoft.AspNetCore.SignalR.Hub
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<ApiHub> _logger;
 
-    public ApiHub(IHttpContextAccessor httpContextAccessor)
+    public ApiHub(IHttpContextAccessor httpContextAccessor, ILogger<ApiHub> logger)
     {
         this._httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     public override Task OnConnectedAsync()
@@ -58,15 +61,30 @@ public class ApiHub : Microsoft.AspNetCore.SignalR.Hub
         return base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendCompanyUpdate(string userId)
+    public async Task SendSignal(EventsEnum eventType, string userId)
     {
-        var ids = Storage.ConnectedUsers[userId];
-        await Clients.Clients(ids).SendAsync(EventsEnum.CompanyUpdated.ToString());
+        if (Storage.ConnectedUsers.TryGetValue(userId, out var ids))
+        {
+            await Clients.Clients(ids).SendAsync(eventType.ToString());
+        }
+        else
+        {
+            _logger.LogWarning("Пользователь с id " + userId + " не подключен к хабу");
+        }
     }
 
-    public async Task SendPasswordUpdate(string userId)
+    public async Task SendSignalRange(EventsEnum eventType, List<Guid> userIds)
     {
-        var ids = Storage.ConnectedUsers[userId];
-        await Clients.Clients(ids).SendAsync(EventsEnum.PasswordUpdated.ToString());
+        foreach (var id in userIds)
+        {
+            if (Storage.ConnectedUsers.TryGetValue(id.ToString(), out var ids))
+            {
+                await Clients.Clients(ids).SendAsync(eventType.ToString());
+            }
+            else
+            {
+                _logger.LogWarning("Пользователь с id " + id + " не подключен к хабу");
+            }
+        }
     }
 }

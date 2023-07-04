@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Passwork.Server.Application.Interfaces;
@@ -34,7 +35,11 @@ public static class ApplicationConfiguration
 
         services.AddScoped<ISeedingService, SeedingService>();
         services.AddScoped<IAccountService, AccountService>();
-        services.AddSignalR();
+        services.AddSignalR(hubOpt =>
+        {
+            hubOpt.ClientTimeoutInterval = TimeSpan.FromHours(2);
+            hubOpt.EnableDetailedErrors = true;
+        });
         services.AddSingleton<ApiHub>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -15,6 +15,7 @@ public class HubClient
 
     public event Action OnCompanyUpdated;
     public event Action OnPassworUpdated;
+    public event Action OnSafeUsersUpdated;
 
     public HubClient(
         AuthenticationStateProvider authenticationStateProvider, 
@@ -54,6 +55,11 @@ public class HubClient
         _hubConnection.On(EventsEnum.PasswordUpdated.ToString(), () =>
         {
             OnPassworUpdated?.Invoke();
+        });
+
+        _hubConnection.On(EventsEnum.SafeUserUpdated.ToString(), () =>
+        {
+            OnSafeUsersUpdated?.Invoke();
         });
 
         try

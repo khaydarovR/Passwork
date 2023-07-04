@@ -4,4 +4,5 @@ public enum EventsEnum
 {
     CompanyUpdated,
     PasswordUpdated,
+    SafeUserUpdated,
 }

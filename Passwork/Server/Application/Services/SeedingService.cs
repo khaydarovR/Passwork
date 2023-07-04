@@ -122,4 +122,17 @@ public class SeedingService : ISeedingService
 
         InitClaims().Wait();
     }
+
+    public void DropCreateDb()
+    {
+        Console.WriteLine("Вы действительно хотите пересоздать все таблицы?: y - yes, n - no");
+        if(Console.ReadKey().KeyChar == 'y')
+        {
+            _dbContext.Database.EnsureDeleted();
+
+            _dbContext.Database.EnsureCreated();
+            _logger.LogWarning("БД был удален и пересоздан");
+        }
+        _logger.LogWarning("Отмена операции");
+    }
 }
