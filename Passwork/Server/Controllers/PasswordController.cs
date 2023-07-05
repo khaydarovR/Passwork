@@ -35,21 +35,37 @@ namespace Passwork.Server.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest("Не валидные данные");
+                return BadRequest(new ErrorMessage { Message = "Не валидные данные" });
             }
             if (model.Tags?.Count > 5)
             {
-                return BadRequest("Максимально допустимое количество тегов - 5");
+                return BadRequest( new ErrorMessage { Message = "Максимально допустимое количество тегов - 5" });
             }
             var claimsPrincipal = HttpContext.User;
             var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
-            var user = await _context.AppUsers.FirstAsync(u => u.Id == Guid.Parse(id));
+            var currentUser = await _context.AppUsers.FirstAsync(u => u.Id == Guid.Parse(id));
+
+            var currentUserRight = (await _context.SafeUsers
+                .SingleAsync(su => su.AppUserId == currentUser.Id && su.SafeId == model.SafeId)).Right;
+
+            if (currentUserRight < RightEnum.Write)
+            {
+                return BadRequest(new ErrorMessage { Message = $"[{currentUserRight.MapToVm()}] Не достаточно прав для записи новых паролей" });
+            }
+
+            var safeOwnerId = (await _context.SafeUsers
+                .SingleAsync(su => su.Right == RightEnum.Owner && su.SafeId == model.SafeId)).AppUserId;
+
+            var masterPw = await _context.AppUsers
+                .Where(u => u.Id == safeOwnerId)
+                .Select(u => u.MasterPassword)
+                .SingleAsync();
 
             var newPassword = new Password
             {
                 Title = model.Title,
-                Login = Encryptor.Encrypt(user.MasterPassword, model.Login),
-                Pw = Encryptor.Encrypt(user.MasterPassword, model.Pw),
+                Login = Encryptor.Encrypt(masterPw, model.Login),
+                Pw = Encryptor.Encrypt(masterPw, model.Pw),
                 Note = model.Note,
                 SafeId = model.SafeId,
                 UseInUtl = model.UseInUrl,
@@ -89,6 +105,16 @@ namespace Passwork.Server.Controllers
                 return BadRequest("Не указан id сейфа");
             }
 
+            var claimsPrincipal = HttpContext.User;
+            var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+            var currentUser = await _context.AppUsers.FirstAsync(u => u.Id == Guid.Parse(id));
+
+            var currentUserRight = (await _context.SafeUsers.SingleAsync(su => su.AppUserId == currentUser.Id && su.SafeId == safeId)).Right;
+
+            if(currentUserRight < RightEnum.Visible)
+            {
+                return BadRequest(new ErrorMessage { Message = $"[{currentUserRight.MapToVm()}] Не достаточно прав для просмотра записей в сейфе" });
+            }
 
             var result = new List<PasswordVm>();
 
@@ -116,21 +142,24 @@ namespace Passwork.Server.Controllers
             }
             var result = new PasswordDetailVm();
 
-            var safeId = (await _context.Passwords
-                .SingleAsync(p => p.Id == pwId)).SafeId;
-
             var claimsPrincipal = HttpContext.User;
             var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
 
-            var right = await _context.SafeUsers
+            var safeId = (await _context.Passwords
+                .SingleAsync(p => p.Id == pwId)).SafeId;
+
+            var safeOwnerId = (await _context.SafeUsers
+                .SingleAsync(su => su.Right == RightEnum.Owner && su.SafeId == safeId)).AppUserId;
+
+            var currentUserRight = await _context.SafeUsers
                 .Where(su => su.AppUserId == Guid.Parse(userId))
                 .Where(su => su.SafeId == safeId)
                 .Select(su => su.Right)
                 .SingleAsync();
 
-            if ((int)right < (int)RightEnum.Read)
+            if (currentUserRight < RightEnum.Read)
             {
-                return BadRequest(new ErrorMessage { Message = "Не достаточно прав"});
+                return BadRequest(new ErrorMessage { Message = $"[{currentUserRight.MapToVm()}] Не достаточно прав для чтения"});
             }
 
             var passwordDetail = await _context.Passwords
@@ -139,10 +168,12 @@ namespace Passwork.Server.Controllers
                 .SingleAsync(p => p.Id == pwId);
 
             var masterPw = await _context.AppUsers
-                .Where(u => u.Id == Guid.Parse(userId))
+                .Where(u => u.Id == safeOwnerId)
                 .Select(u => u.MasterPassword)
                 .SingleAsync();
             result = passwordDetail.MapToDetailVm(masterPw);
+
+            await AddActivityLog(ActivityNames.ReceivedDetailData, pwId, Guid.Parse(userId));
 
             return Ok(result);
         }
@@ -158,7 +189,7 @@ namespace Passwork.Server.Controllers
             };
             _context.ActivityLogs.Add(newLog);
             await _context.SaveChangesAsync();
-            _logger.LogWarning("Activity log added");
+            _logger.LogDebug("Activity log added");
         }
     }
 }

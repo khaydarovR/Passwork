@@ -220,9 +220,9 @@ namespace Passwork.Server.Controllers
             {
                 return BadRequest(new ErrorMessage { Message = $"[{rightCurentUser.MapToVm().ToString()}] Не достаточно прав" });
             }
-            if (rightCurentUser < newRights.NewRight.MapToEnum())
+            if (rightCurentUser <= newRights.NewRight.MapToEnum())
             {
-                return BadRequest(new ErrorMessage { Message = "Запрещено выдавать права превышающие ваше текущее" });
+                return BadRequest(new ErrorMessage { Message = "Запрещено выдавать право превышающие ваше текущее" });
             }
 
             var usersForRightChangeDb = await _context.SafeUsers
@@ -244,6 +244,8 @@ namespace Passwork.Server.Controllers
             await _context.SaveChangesAsync();
 
             var editedUserIds = usersForRightChangeDb.Select(u => u.AppUserId).ToList();
+            var safeOwnerId = (await _context.SafeUsers.SingleAsync(u => u.Right == RightEnum.Owner && u.SafeId == newRights.SafeId)).AppUserId;
+            await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, safeOwnerId.ToString());
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
 

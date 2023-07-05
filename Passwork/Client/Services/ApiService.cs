@@ -57,7 +57,6 @@ public class ApiService
 
         if (response.IsSuccessStatusCode)
         {
-            Companies = new();
             Companies = await response.Content.ReadFromJsonAsync<List<CompaniesVm>>()?? new List<CompaniesVm>();
             return null;
         }
@@ -79,7 +78,7 @@ public class ApiService
         }
     }
 
-    public async Task LoadLinkedPasswords(Guid safeId)
+    public async Task<bool> LoadLinkedPasswords(Guid safeId)
     {
         var response = await _httpClient.GetAsync($"/api/Password/GetAll?safeId={safeId}");
 
@@ -87,6 +86,12 @@ public class ApiService
         {
             var res = await response.Content.ReadFromJsonAsync<List<PasswordVm>>()?? new List<PasswordVm>();
             Passwords = res;
+            return true;
+        }
+        else
+        {
+            CurrentErrorMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage();
+            return false;
         }
     }
 

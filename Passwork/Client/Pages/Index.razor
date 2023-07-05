@@ -35,7 +35,7 @@
                                     {
                                         @foreach (var safe in com.SafeVms)
                                         {
-                                            <MudNavLink OnClick="@(() => SelectSafe(safe.Id, safe.Title, com.Name))" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Success">
+                                            <MudNavLink OnClick="@(() => SelectSafe(safe, com.Name))" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Success">
                                                 @safe?.Title
                                             </MudNavLink>
                                         }
@@ -61,7 +61,7 @@
                                     {
                                         @foreach (var safe in com.SafeVms)
                                         {
-                                            <MudNavLink Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                            <MudNavLink OnClick="@(() => SelectSafe(safe, com.Name))" Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
                                         }
                                     }
                                 </MudNavGroup>
@@ -127,7 +127,7 @@
                     @if(isLoadPwDetail != null && isLoadPwDetail == true){
                         <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
                     }
-                    @if(isLoadPwDetail == false)
+                    @if(isLoadPwDetail == false && pwDetial != null)
                     {
                         <MudGrid>
                             <MudItem xs="12">
@@ -171,6 +171,7 @@
     private bool? isLoadPwDetail;
     private string currentSafeName = string.Empty;
     private string currentComName = string.Empty;
+    private RightEnumVm currentRight;
     private List<PasswordVm> passwords = new();
     private PasswordDetailVm pwDetial;
     private bool isEditing { get; set; } = false;
@@ -183,11 +184,13 @@
         bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
         if ((isAuthenticated is not null) && isAuthenticated == true)
         {
-            await HubClient.StartAsync();
+            //await HubClient.StartAsync();
             await ApiService.LoadOwnerCom();
             await ApiService.LoadLinkedCom();
             HubClient.OnCompanyUpdated += HandleCompanyUpdated;
             HubClient.OnSafeUsersUpdated += HandleCompanyUpdated;
+            HubClient.OnSafeUsersUpdated += HandlePasswordUpdated;
+            HubClient.OnSafeUsersUpdated += HandlePasswordDetailUpdated;
             StateHasChanged();
         }
     }
@@ -219,11 +222,30 @@
         // Обновление списка паролей при получении обновлений
         InvokeAsync(async () =>
         {
-            await ApiService.LoadLinkedPasswords(currentSafeId);
-            passwords = ApiService.Passwords;
+            bool isSuccessful = await ApiService.LoadLinkedPasswords(currentSafeId);
+            if (isSuccessful)
+            {
+                passwords = ApiService.Passwords;
+            }
+            else
+            {
+                Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+                passwords = new();
+            }
             StateHasChanged();
         });
     }
+
+    private void HandlePasswordDetailUpdated()
+    {
+        // Обновление информации о пароле при получении обновлений
+        InvokeAsync(async () =>
+        {
+            await LoadPwDetail(currentSafeId);
+            StateHasChanged();
+        });
+    }
+
 
     DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
@@ -255,29 +277,44 @@
         {
             pwDetial = ApiService.PasswordDetail;
             isLoadPwDetail = false;
-            StateHasChanged();
         }
         else
         {
+            pwDetial = new();
             Snackbar.Add(response, Severity.Warning);
         }
+        StateHasChanged();
     }
 
-    async Task SelectSafe(Guid safeId, string safeName, string comName)
+    async Task SelectSafe(SafeVm selectedSafe, string comName)
     {
         var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
         var authenticated = await provider.GetAuthenticationStateAsync();
         bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
         if ((isAuthenticated is not null) && isAuthenticated == true)
         {
-            currentSafeId = safeId;
-            currentSafeName = safeName;
+            currentSafeId = selectedSafe.Id;
+            currentSafeName = selectedSafe.Title;
             currentComName = comName;
-            await ApiService.LoadLinkedPasswords(safeId);
-            passwords = ApiService.Passwords;
+            currentRight = selectedSafe.RightInThisSafe;
+
+            bool res = await ApiService.LoadLinkedPasswords(selectedSafe.Id);
+            if(res)
+            {
+                passwords = ApiService.Passwords;
+            }
+            else
+            {
+                currentSafeId = Guid.Empty;
+                currentSafeName = string.Empty;
+                passwords = new();
+                Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+            }
+            StateHasChanged();
             HubClient.OnPassworUpdated += HandlePasswordUpdated;
         }
     }
+
 
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
     bool isShowPw;
