@@ -60,7 +60,7 @@
     protected override async Task OnInitializedAsync()
     {
         #warning Только для дебаг режима
-        //AuthManager.Logout();
+        AuthManager.Logout();
         await CustomAuthStateProvider.GetAuthenticationStateAsync();
         base.OnInitialized();
     }

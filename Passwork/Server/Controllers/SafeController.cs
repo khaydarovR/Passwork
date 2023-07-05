@@ -10,6 +10,7 @@ using Passwork.Server.Utils;
 using Passwork.Shared.Dto;
 using Passwork.Shared.SignalR;
 using Passwork.Shared.ViewModels;
+using System.Linq;
 using System.Security.Claims;
 
 
@@ -191,6 +192,58 @@ namespace Passwork.Server.Controllers
 
 
             var editedUserIds = users.Select(u => u.AppUserId).ToList();
+            await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
+            await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
+
+            return Ok();
+        }
+
+
+        [HttpPost("ChangeRights")]
+        public async Task<ActionResult<List<SafeUserVm>>> ChangeRights([FromBody] ChangeUserRightsDto newRights)
+        {
+            if (newRights.SafeId == Guid.Empty)
+            {
+                return BadRequest("Не указан id сейфа");
+            }
+
+            var claimsPrincipal = HttpContext.User;
+            var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+            var rightCurentUser = await _context.SafeUsers
+                .Where(su => su.AppUserId == Guid.Parse(userId))
+                .Where(su => su.SafeId == newRights.SafeId)
+                .Select(su => su.Right)
+                .SingleAsync();
+
+            if (rightCurentUser < RightEnum.Invite)
+            {
+                return BadRequest(new ErrorMessage { Message = $"[{rightCurentUser.MapToVm().ToString()}] Не достаточно прав" });
+            }
+            if (rightCurentUser < newRights.NewRight.MapToEnum())
+            {
+                return BadRequest(new ErrorMessage { Message = "Запрещено выдавать права превышающие ваше текущее" });
+            }
+
+            var usersForRightChangeDb = await _context.SafeUsers
+                .Where(su => (su.SafeId == newRights.SafeId && newRights.UserIds.Contains(su.AppUserId)))
+                .ToListAsync();
+
+            var ownerIsExists = usersForRightChangeDb.Any(u => u.Right == RightEnum.Owner);
+            if (ownerIsExists)
+            {
+                return BadRequest(new ErrorMessage { Message = "Запрещено менять права владельца сейфа" });
+            }
+
+            foreach (var u in usersForRightChangeDb)
+            {
+                u.Right = newRights.NewRight.MapToEnum();
+            }
+
+            _context.SafeUsers.UpdateRange(usersForRightChangeDb);
+            await _context.SaveChangesAsync();
+
+            var editedUserIds = usersForRightChangeDb.Select(u => u.AppUserId).ToList();
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
 

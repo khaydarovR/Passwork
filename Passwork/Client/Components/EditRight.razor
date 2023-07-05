@@ -13,7 +13,7 @@
             <MudSelectItem Value="@RightEnumVm.Записывать" />
             <MudSelectItem Value="@RightEnumVm.Приглашать" />
             <MudSelectItem Value="@RightEnumVm.Удалять" />
-            <MudSelectItem Value="@RightEnumVm.Владелец" />
+            <MudSelectItem Disabled Value="@RightEnumVm.Владелец" />
         </MudSelect>
         
         <MudList>
@@ -21,7 +21,7 @@
             @foreach (var user in SafeUsers)
             {
                 <MudListItem>
-                    @user.Email @(user.UserId.ToString()[..3])...@(user.UserId.ToString()[^3..])
+                    @user.Email @user.Right.ToString() [@(user.UserId.ToString()[..3])...@(user.UserId.ToString()[^3..])]
                 </MudListItem>
                 <MudDivider></MudDivider>
             }
@@ -45,7 +45,25 @@
 
     async Task UpdateRights()
     {
-        // api/safe/updateRights
+        ChangeUserRightsDto requestModel = new();
+        requestModel.SafeId = SafeId;
+        requestModel.NewRight = newRightForUsers;
+
+        foreach (var user in SafeUsers)
+        {
+            requestModel.UserIds.Add(user.UserId);
+        }
+
+        var response = await ApiService.PostDataAsync<ChangeUserRightsDto>("/api/Safe/ChangeRights", requestModel);
+        if (response == true)
+        {
+            Snackbar.Add("Права успешно изменены", Severity.Info);
+            MudDialog.Close();
+        }
+        else
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
     }
 
     async Task RemoveFromSafe()
