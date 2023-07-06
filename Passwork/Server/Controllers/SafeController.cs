@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Passwork.Server.Application.Services;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain;
@@ -23,11 +24,13 @@ namespace Passwork.Server.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ApiHub _apiHub;
+        private readonly TgBotService _tgbot;
 
-        public SafeController(AppDbContext context, ApiHub apiHub)
+        public SafeController(AppDbContext context, ApiHub apiHub, TgBotService tgbot)
         {
-            this._context = context;
+            _context = context;
             _apiHub = apiHub;
+            _tgbot = tgbot;
         }
 
 
@@ -250,6 +253,30 @@ namespace Passwork.Server.Controllers
             await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
 
             return Ok();
+        }
+
+
+        [HttpGet("Constring")]
+        public async Task<ActionResult<string>> ConnectionString([FromQuery] Guid safeId)
+        {
+            var claimsPrincipal = HttpContext.User;
+            var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+            var curentSafeUser = await _context.SafeUsers
+                .Where(su => su.AppUserId == Guid.Parse(userId))
+                .Where(su => su.SafeId == safeId)
+                .SingleAsync();
+
+            if(curentSafeUser.Right != RightEnum.Owner)
+            {
+                BadRequest("Не достаточно прав, только для владельца");
+            }
+
+            var user = await _context.AppUsers
+                .SingleAsync(u => u.Id == curentSafeUser.AppUserId);
+
+            _tgbot.ConnectionString = KeyGenerator.GetRandomString() + " " + user.Email;
+            return Ok(_tgbot.ConnectionString);
         }
     }
 }

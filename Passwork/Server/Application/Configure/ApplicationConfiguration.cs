@@ -41,6 +41,7 @@ public static class ApplicationConfiguration
             hubOpt.EnableDetailedErrors = true;
         });
         services.AddSingleton<ApiHub>();
+        services.AddSingleton<TgBotService>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

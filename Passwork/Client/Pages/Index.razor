@@ -97,6 +97,20 @@
                             <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
                                 Создать пароль
                             </MudNavLink>
+                            <MudButton OnClick="@(() => GetConnectionString(currentSafeId))" Size="Size.Small" Variant="Variant.Text">Строка подключения к тг боту</MudButton>
+                            <MudDialog @bind-IsVisible="conStringVisible">
+                                <TitleContent>
+                                    <MudText Typo="Typo.h6">
+                                        <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> Строка подключения
+                                    </MudText>
+                                </TitleContent>
+                                <DialogContent>
+                                    <p>@(botConnectionString?? "Ошибка")</p>
+                                </DialogContent>
+                                <DialogActions>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => conStringVisible=false)" Class="px-10">Close</MudButton>
+                                </DialogActions>
+                            </MudDialog>
                         }
                         @foreach (var pas in passwords)
                         {
@@ -174,6 +188,7 @@
 
 
 @code {
+    private string botConnectionString = null!;
     private Guid currentSafeId;
     private bool? isLoadPwDetail;
     private string currentSafeName = string.Empty;
@@ -182,6 +197,7 @@
     private List<PasswordVm> passwords = new();
     private PasswordDetailVm pwDetial;
     private bool isEditing { get; set; } = false;
+    private bool conStringVisible { get; set; } = false;
 
 
     protected override async Task OnInitializedAsync()
@@ -240,6 +256,13 @@
             await LoadPwDetail(currentSafeId);
             StateHasChanged();
         });
+    }
+
+    async Task GetConnectionString(Guid safeId)
+    {
+        conStringVisible = true;
+        botConnectionString = await ApiService.LoadConnectionString(safeId);
+        StateHasChanged();
     }
 
     async Task SendChangedPw()
