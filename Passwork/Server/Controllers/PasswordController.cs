@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Passwork.Server.Application.Services;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain;
@@ -21,12 +22,14 @@ namespace Passwork.Server.Controllers
         private readonly AppDbContext _context;
         private readonly ApiHub _apiHub;
         private readonly ILogger<PasswordController> _logger;
+        private readonly TgBotService _tgbot;
 
-        public PasswordController(AppDbContext context, ApiHub apiHub, ILogger<PasswordController> logger)
+        public PasswordController(AppDbContext context, ApiHub apiHub, ILogger<PasswordController> logger, TgBotService tgbot)
         {
             _context = context;
             _apiHub = apiHub;
             _logger = logger;
+            _tgbot = tgbot;
         }
 
 
@@ -56,16 +59,15 @@ namespace Passwork.Server.Controllers
             var safeOwnerId = (await _context.SafeUsers
                 .SingleAsync(su => su.Right == RightEnum.Owner && su.SafeId == model.SafeId)).AppUserId;
 
-            var masterPw = await _context.AppUsers
+            var masterUser = await _context.AppUsers
                 .Where(u => u.Id == safeOwnerId)
-                .Select(u => u.MasterPassword)
                 .SingleAsync();
 
             var newPassword = new Password
             {
                 Title = model.Title,
-                Login = Encryptor.Encrypt(masterPw, model.Login),
-                Pw = Encryptor.Encrypt(masterPw, model.Pw),
+                Login = Encryptor.Encrypt(masterUser.MasterPassword, model.Login),
+                Pw = Encryptor.Encrypt(masterUser.MasterPassword, model.Pw),
                 Note = model.Note,
                 SafeId = model.SafeId,
                 UseInUtl = model.UseInUrl,
@@ -92,6 +94,9 @@ namespace Passwork.Server.Controllers
 
             await _apiHub.SendSignal(EventsEnum.PasswordUpdated, id);
             await AddActivityLog(ActivityNames.Created, newPassword.Id, Guid.Parse(id));
+
+            await _tgbot.Notify($"Создан новый пароль в сейфе {model.SafeId}," +
+                $"\n Текущее право пользовтеля {currentUser.Email} - {currentUserRight.MapToVm()} \n Название записи: {model.Title}", masterUser.Email);
 
             return Ok();
         }
