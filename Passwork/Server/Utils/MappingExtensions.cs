@@ -129,5 +129,18 @@ public static class MappingExtensions
 
         return res;
     }
-    
+
+    private static Password MapToPassword(this PasswordDetailVm self, string masterPw)
+    {
+        var res = new Password();
+
+        res.Title = self.Title;
+        res.IsDeleted = self.IsDeleted;
+        res.Login = Encryptor.Encrypt(masterPw, self.Login);
+        res.Pw = Encryptor.Encrypt(masterPw, self.Pw);
+        res.Note = self.Note;
+        res.UseInUtl = self.UseInUtl;
+
+        return res;
+    }
 }

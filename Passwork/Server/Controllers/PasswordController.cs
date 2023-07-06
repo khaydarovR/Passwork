@@ -122,6 +122,7 @@ namespace Passwork.Server.Controllers
                 .Include(p => p.PasswordTags)
                 .ThenInclude(p => p.Tag)
                 .Where(p => p.SafeId == safeId)
+                .Where(p => p.IsDeleted == false)
                 .ToListAsync();
 
             foreach (var p in passwords)
@@ -167,15 +168,70 @@ namespace Passwork.Server.Controllers
                 .ThenInclude(p => p.Tag)
                 .SingleAsync(p => p.Id == pwId);
 
-            var masterPw = await _context.AppUsers
-                .Where(u => u.Id == safeOwnerId)
-                .Select(u => u.MasterPassword)
-                .SingleAsync();
-            result = passwordDetail.MapToDetailVm(masterPw);
+            var safeOwner = await _context.AppUsers
+                .SingleAsync(u => u.Id == safeOwnerId);
+
+            result = passwordDetail.MapToDetailVm(safeOwner.MasterPassword);
 
             await AddActivityLog(ActivityNames.ReceivedDetailData, pwId, Guid.Parse(userId));
 
             return Ok(result);
+        }
+
+
+        [HttpPost("Edit")]
+        public async Task<ActionResult> Edit([FromBody] PasswordDetailVm changedPw)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ErrorMessage { Message = "Поля заполнены не правльно" });
+            }
+            var claimsPrincipal = HttpContext.User;
+            var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+            var currentUserRight = await _context.SafeUsers
+                .Where(su => su.AppUserId == Guid.Parse(userId))
+                .Where(su => su.SafeId == changedPw.SafeId)
+                .Select(su => su.Right)
+                .SingleAsync();
+
+            if (currentUserRight < RightEnum.Write)
+            {
+                return BadRequest(new ErrorMessage { Message = $"[{currentUserRight.MapToVm()}] Не достаточно прав для изминения" });
+            }
+
+            if (currentUserRight < RightEnum.Delete && changedPw.IsDeleted == true)
+            {
+                return BadRequest(new ErrorMessage { Message = $"[{currentUserRight.MapToVm()}] Не достаточно прав для удаления" });
+            }
+
+            var pwDb = await _context.Passwords.SingleAsync(p => p.Id == changedPw.Id);
+            if (changedPw.IsDeleted)
+            {
+                pwDb.IsDeleted = true;
+                _context.Passwords.Update(pwDb);
+                await _apiHub.SendSignal(EventsEnum.PasswordUpdated, userId);
+                await AddActivityLog(ActivityNames.SoftDeleted, pwDb.Id, Guid.Parse(userId));
+                return Ok();
+            }
+
+            var safeOwnerId = (await _context.SafeUsers
+                .SingleAsync(su => su.Right == RightEnum.Owner && su.SafeId == changedPw.SafeId)).AppUserId;
+
+            var masterUser = await _context.AppUsers
+                .SingleAsync(u => u.Id == safeOwnerId);
+
+            pwDb.Login = Encryptor.Encrypt(masterUser.MasterPassword, changedPw.Login);
+            pwDb.Pw = Encryptor.Encrypt(masterUser.MasterPassword, changedPw.Pw);
+            pwDb.Note = changedPw?.Note;
+            pwDb.UseInUtl = changedPw?.UseInUtl;
+            pwDb.Title = changedPw?.Title;
+            _context.Passwords.Update(pwDb);
+
+            await _apiHub.SendSignal(EventsEnum.PasswordUpdated, userId);
+            await AddActivityLog(ActivityNames.Updated, pwDb.Id, Guid.Parse(userId));
+            return Ok();
+
         }
 
         private async Task AddActivityLog(string title, Guid pwId, Guid userId)

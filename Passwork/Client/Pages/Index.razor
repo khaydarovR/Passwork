@@ -137,6 +137,7 @@
                                                      ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Success" ToggledTitle="On" />
                                 <span>Режим редактирования: @(isEditing ? "On" : "Off")</span>
                                 <MudIconButton Icon="@Icons.Material.Filled.History" Color="Color.Primary" Class="ms-4"/>
+                                <MudIconButton Disabled="@(!isEditing || pwDetial.IsDeleted)" OnClick="@(() => pwDetial.IsDeleted = !pwDetial.IsDeleted)"  Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Class="ms-4"/>
                             </MudItem>
                             <MudItem xs="12" Class="ms-5 ps-5">
                                 <MudTextField @bind-Value="@pwDetial.Title" Label="Название" ReadOnly="@(!isEditing)"/>
@@ -150,9 +151,15 @@
                                               InputType="@PasswordInput" ReadOnly="@(!isEditing)" />
                                 <MudTextField @bind-Value="@pwDetial.Note" Label="Заметка" ReadOnly="@(!isEditing)"/>
                                 <MudTextField @bind-Value="@pwDetial.UseInUtl" Label="Для ресурса" ReadOnly="@(!isEditing)"/>
-                                <MudCheckBox @bind-Checked="@pwDetial.IsDeleted" Label="Удален?" ReadOnly="@(!isEditing)" />
 
-                                <MudButton Disabled="@(!isEditing)" Variant="Variant.Text" Color="Color.Primary">Сохранить изминения</MudButton>
+                                @if (pwDetial.IsDeleted)
+                                {
+                                    <MudButton OnClick="SendChangedPw" Disabled="@(!isEditing)" Variant="Variant.Text" Color="Color.Error">Удалить запись</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton OnClick="SendChangedPw" Disabled="@(!isEditing)" Variant="Variant.Text" Color="Color.Success">Сохранить изминения</MudButton>
+                                }
                             </MudItem>
                         </MudGrid>
                     }
@@ -195,17 +202,6 @@
         }
     }
 
-    bool showLeaveAlert = true;
-    private void CloseMe()
-    {
-        showLeaveAlert = false;
-    }
-
-    void OpenRightsMangerPage(Guid safeId)
-    {
-        ApiService.NavigateTo($"/rights/{currentSafeName}/{safeId}");
-    }
-
     private void HandleCompanyUpdated()
     {
         // Обновление списка компаний при получении обновлений
@@ -246,9 +242,22 @@
         });
     }
 
+    async Task SendChangedPw()
+    {
+        var response = await ApiService.PostDataAsync<PasswordDetailVm>("api/Password/Edit", pwDetial);
+        if(response == true)
+        {
+            isEditing = false;
+            Snackbar.Add("Успешно", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+    }
+
 
     DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
-
     async Task CreateSafe(Guid comId, string comName)
     {
         var parameters = new DialogParameters();
@@ -334,6 +343,7 @@
             PasswordInput = InputType.Text;
         }
     }
+
     void EnabledIsEditing()
     {
         @if (isEditing)
@@ -346,5 +356,17 @@
             isEditing = true;
             //post query with pwId for unlock this pw
         }
+    }
+
+
+    bool showLeaveAlert = true;
+    private void CloseMe()
+    {
+        showLeaveAlert = false;
+    }
+
+    void OpenRightsMangerPage(Guid safeId)
+    {
+        ApiService.NavigateTo($"/rights/{currentSafeName}/{safeId}");
     }
 }

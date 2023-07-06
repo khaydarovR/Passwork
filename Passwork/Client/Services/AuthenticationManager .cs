@@ -1,5 +1,6 @@
 ﻿using Passwork.Client.Utils;
 using Passwork.Shared.Dto;
+using Passwork.Shared.ViewModels;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -61,7 +62,7 @@ public class AuthenticationManager
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
-            ErrorMessage = (await response.Content.ReadFromJsonAsync<ServerResponseError>())?.Message ?? "Ошибка";
+            ErrorMessage = (await response.Content.ReadFromJsonAsync<ErrorMessage>())?.Message ?? "Ошибка";
             return false;
         }
         var token = (await response.Content.ReadAsStringAsync()) ?? string.Empty;
