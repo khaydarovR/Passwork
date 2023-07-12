@@ -1,5 +1,5 @@
 # Passwork
-### Схема БД
+
 ## Функционал
  - Авторизация\аунтентификация
  - Создание несколько компании
@@ -14,7 +14,7 @@
  - jwt авторизация
  - PostgreSQL
  - 
-
+### Схема БД
 ![image](https://github.com/khaydarovR/Passwork/assets/95288769/fa4be6f3-ad25-4fca-8db7-3489cb9991fd)
 
 
