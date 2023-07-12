@@ -276,7 +276,7 @@ namespace Passwork.Server.Controllers
                 .SingleAsync(u => u.Id == curentSafeUser.AppUserId);
 
             _tgbot.ConnectionString = KeyGenerator.GetRandomString() + " " + user.Email;
-            return Ok(_tgbot.ConnectionString);
+            return Ok("key " + _tgbot.ConnectionString);
         }
     }
 }

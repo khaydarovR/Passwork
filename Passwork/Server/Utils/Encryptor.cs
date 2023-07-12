@@ -5,7 +5,7 @@ namespace Passwork.Server.Utils;
 
 public static class Encryptor
 {
-    public static string Encrypt(string key, string password)
+    public static string Encrypt(string password, string key)
     {
         using (Aes aes = Aes.Create())
         {
@@ -31,7 +31,7 @@ public static class Encryptor
         }
     }
 
-    public static string Decrypt(string key, string encryptedPassword)
+    public static string Decrypt(string encryptedPassword, string key)
     {
         using (Aes aes = Aes.Create())
         {

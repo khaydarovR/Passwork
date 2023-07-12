@@ -6,8 +6,8 @@ namespace Passwork.Server.Application.Interfaces
 {
     public interface IAccountService
     {
-        Task<Response<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal);
-        Task<Response<string>> LoginUser(UserLoginDto model);
-        Task<Response<string>> RegisterNewUser(UserRegisterDto model);
+        Task<ServiceResponse<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal);
+        Task<ServiceResponse<string>> LoginUser(UserLoginDto model);
+        Task<ServiceResponse<string>> RegisterNewUser(UserRegisterDto model);
     }
 }

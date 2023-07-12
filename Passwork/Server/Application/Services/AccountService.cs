@@ -7,6 +7,7 @@ using Passwork.Server.DAL;
 using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
 using Passwork.Shared.Dto;
+using Passwork.Shared.ViewModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -18,22 +19,25 @@ public class AccountService : IAccountService
     private readonly AppDbContext _context;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+    private readonly ILogger<AccountService> _logger;
 
 
     public AccountService(
         UserManager<AppUser> userManager,
         AppDbContext context,
         SignInManager<AppUser> signInManager,
-        RoleManager<IdentityRole<Guid>> roleManager)
+        RoleManager<IdentityRole<Guid>> roleManager,
+        ILogger<AccountService> logger)
     {
         _userManager = userManager;
         _context = context;
         _signInManager = signInManager;
         _roleManager = roleManager;
+        _logger = logger;
     }
 
 
-    public async Task<Response<string>> RegisterNewUser(UserRegisterDto model)
+    public async Task<ServiceResponse<string>> RegisterNewUser(UserRegisterDto model)
     {
         var newUser = await MapToAppUser(model);
 
@@ -46,18 +50,16 @@ public class AccountService : IAccountService
             var claims = GetClaimsFor(newUserDb);
             await _userManager.AddClaimsAsync(newUserDb, claims);
             var jwt = CreateJwt(claims);
-            return new Response<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
+            _logger.LogInformation("Created new app user", newUserDb);
+            return new ServiceResponse<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
         }
 
-        var badResponse = new Response<string>(false);
-        foreach (var error in result.Errors)
-        {
-            badResponse.Errors.Add(error.Description);
-        }
+        var badResponse = new ServiceResponse<string>(false);
+        badResponse.ErrorMessage = new ErrorMessage(result.Errors.First().Description);
         return badResponse;
     }
 
-    public async Task<Response<string>> LoginUser(UserLoginDto model)
+    public async Task<ServiceResponse<string>> LoginUser(UserLoginDto model)
     {
         var result = await _signInManager.PasswordSignInAsync
             (model.Email, model.Password, model.RememberMe, false);
@@ -67,17 +69,17 @@ public class AccountService : IAccountService
             var userDb = await _userManager.Users.SingleAsync(u => u.Email == model.Email);
             var claims = await _userManager.GetClaimsAsync(userDb);
             var jwt = CreateJwt(claims.ToList());
-            return new Response<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
+            return new ServiceResponse<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
         }
 
-        return new Response<string>("Ошибка авторизации", false);
+        return new ServiceResponse<string>("Ошибка авторизации", false);
     }
 
-    public async Task<Response<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal)
+    public async Task<ServiceResponse<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal)
     {
         var result = await _userManager.GetUserAsync(claimsPrincipal);
 
-        return new Response<AppUser>("Ошибка в куках, зарегистрируйтесть заного", false);
+        return new ServiceResponse<AppUser>("Ошибка в куках, зарегистрируйтесть заного", false);
     }
 
 

@@ -55,6 +55,10 @@ namespace Passwork.Server.Controllers
 
             foreach (var t in tags)
             {
+                if(result.Any(tvm => tvm.Title == t.Title))
+                {
+                    continue;
+                }
                 result.Add(t.MapToVm());
             }
 

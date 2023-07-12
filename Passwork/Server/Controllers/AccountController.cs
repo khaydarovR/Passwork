@@ -40,11 +40,7 @@ namespace Passwork.Server.Controllers
                 return Ok(response.ResponseModel);
             }
 
-            foreach (var e in response.Errors)
-            {
-                ModelState.AddModelError("", e);
-            }
-            return BadRequest(response.Errors);
+            return BadRequest(response.ErrorMessage);
         }
 
 
@@ -62,11 +58,7 @@ namespace Passwork.Server.Controllers
                 return Ok(response.ResponseModel);
             }
 
-            foreach (var e in response.Errors)
-            {
-                ModelState.AddModelError("", e);
-            }
-            return BadRequest(response.Errors);
+            return BadRequest(response.ErrorMessage);
         }
 
         [HttpPost("Logout")]

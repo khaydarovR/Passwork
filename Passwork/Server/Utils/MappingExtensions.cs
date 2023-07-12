@@ -66,8 +66,8 @@ public static class MappingExtensions
         var res = new PasswordDetailVm();
         res.Id = self.Id;
         res.Title = self.Title;
-        res.Login = Encryptor.Decrypt(masterPw ,self.Login);
-        res.Pw = Encryptor.Decrypt(masterPw ,self.Pw);
+        res.Login = Encryptor.Decrypt(self.Login, masterPw);
+        res.Pw = Encryptor.Decrypt(self.Pw, masterPw);
         res.Note = self.Note;
         res.UseInUtl = self.UseInUtl;
         res.IsDeleted = self.IsDeleted;
@@ -136,8 +136,8 @@ public static class MappingExtensions
 
         res.Title = self.Title;
         res.IsDeleted = self.IsDeleted;
-        res.Login = Encryptor.Encrypt(masterPw, self.Login);
-        res.Pw = Encryptor.Encrypt(masterPw, self.Pw);
+        res.Login = Encryptor.Encrypt(self.Login, masterPw);
+        res.Pw = Encryptor.Encrypt(self.Pw, masterPw);
         res.Note = self.Note;
         res.UseInUtl = self.UseInUtl;
 
