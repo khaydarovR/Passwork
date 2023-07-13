@@ -25,12 +25,14 @@ namespace Passwork.Server.Controllers
         private readonly AppDbContext _context;
         private readonly ApiHub _apiHub;
         private readonly TgBotService _tgbot;
+        private readonly ILogger<SafeController> _logger;
 
-        public SafeController(AppDbContext context, ApiHub apiHub, TgBotService tgbot)
+        public SafeController(AppDbContext context, ApiHub apiHub, TgBotService tgbot, ILogger<SafeController> logger)
         {
             _context = context;
             _apiHub = apiHub;
             _tgbot = tgbot;
+            _logger = logger;
         }
 
 
@@ -147,6 +149,8 @@ namespace Passwork.Server.Controllers
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, newSafeUser.Id.ToString());
 
+            _logger.LogInformation($"user: {userId} added to the safe: {addUserToSafeDto.SafeId}");
+
             return Ok();
         }
 
@@ -198,6 +202,7 @@ namespace Passwork.Server.Controllers
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
 
+            _logger.LogInformation($"Delete users: {users.Count} from safe: {usersForDelete.SafeId}");
             return Ok();
         }
 
@@ -251,6 +256,10 @@ namespace Passwork.Server.Controllers
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, safeOwnerId.ToString());
             await _apiHub.SendSignal(EventsEnum.SafeUserUpdated, userId);
             await _apiHub.SendSignalRange(EventsEnum.SafeUserUpdated, editedUserIds);
+
+            var currentUser = await _context.AppUsers.SingleAsync(u => u.Id == Guid.Parse(userId));
+            await _tgbot.Notify($"Пользователь: {userId} изминил права в сейфе: {newRights.SafeId}", currentUser.Email);
+            _logger.LogInformation($"user: {userId} changed rights in safe: {newRights.SafeId}");
 
             return Ok();
         }
