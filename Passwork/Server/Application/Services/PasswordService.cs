@@ -75,6 +75,15 @@ public class PasswordService : IPasswordService
         await _context.Passwords.AddAsync(newPassword);
         _context.SaveChanges();
 
+        await AddTags(model, newPassword);
+
+        await NotifyCreatedPw(model, userId, currentUserRight, masterUser, newPassword);
+
+        return new ServiceResponse<bool>(true);
+    }
+
+    private async Task AddTags(PasswordCreateDto model, Password newPassword)
+    {
         var tags = model.Tags?.Select(tag => new Tag { Title = tag }).ToList();
         await _context.Tags.AddRangeAsync(tags);
         _context.SaveChanges();
@@ -86,10 +95,6 @@ public class PasswordService : IPasswordService
         }
         await _context.PasswordTags.AddRangeAsync(pasTags);
         _context.SaveChanges();
-
-        await NotifyCreatedPw(model, userId, currentUserRight, masterUser, newPassword);
-
-        return new ServiceResponse<bool>(true);
     }
 
     private async Task NotifyCreatedPw(PasswordCreateDto model, Guid userId, RightEnum currentUserRight, AppUser masterUser, Password newPassword)

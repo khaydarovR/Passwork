@@ -21,18 +21,10 @@ namespace Passwork.Server.Controllers
     [Authorize]
     public class PasswordController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly ApiHub _apiHub;
-        private readonly ILogger<PasswordController> _logger;
-        private readonly TgBotService _tgbot;
         private readonly IPasswordService _pwService;
 
-        public PasswordController(AppDbContext context, ApiHub apiHub, ILogger<PasswordController> logger, TgBotService tgbot, IPasswordService pwService)
+        public PasswordController(IPasswordService pwService)
         {
-            _context = context;
-            _apiHub = apiHub;
-            _logger = logger;
-            _tgbot = tgbot;
             _pwService = pwService;
         }
 
@@ -64,11 +56,6 @@ namespace Passwork.Server.Controllers
             var claimsPrincipal = HttpContext.User;
             var id = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest("Не валидные данные: " + ModelState.First().Value);
-            }
-
             var response = await _pwService.GetPasswords(safeId, Guid.Parse(id));
             if (response.IsSuccessful)
             {
@@ -85,11 +72,6 @@ namespace Passwork.Server.Controllers
             if (pwId == Guid.Empty)
             {
                 return BadRequest(new ErrorMessage { Message = "Отсутсвует guid пароля"});
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ErrorMessage { Message = "Не валлидные данные: " + ModelState.First().Value });
             }
 
             var claimsPrincipal = HttpContext.User;
