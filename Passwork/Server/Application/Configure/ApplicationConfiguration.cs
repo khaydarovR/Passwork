@@ -17,10 +17,12 @@ public static class ApplicationConfiguration
 {
     public static IServiceCollection AddMy(this IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<AppDbContext>(opt =>
+/*        services.AddDbContext<AppDbContext>(opt =>
         {
             opt.UseNpgsql(config.GetConnectionString("PostgreDb"));
-        });
+        });*/
+
+        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(config.GetConnectionString("MSS")));
 
         services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
         {

@@ -45,8 +45,13 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
             .HasForeignKey(c => c.AppUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<SafeUsers>()
-            .HasKey(sc => new { sc.SafeId, sc.AppUserId });
+        modelBuilder.Entity<SafeUsers>().HasKey("SafeId", "AppUserId");
+        modelBuilder.Entity<SafeUsers>().HasOne(su => su.Safe)
+            .WithMany(u => u.SafeUsers)
+            .HasForeignKey(su => su.SafeId).IsRequired(false);
+        modelBuilder.Entity<SafeUsers>().HasOne(su => su.AppUser)
+            .WithMany(u => u.SafeUsers)
+            .HasForeignKey(su => su.AppUserId).IsRequired(false);
         modelBuilder.Entity<SafeUsers>()
             .Property(c => c.Right).IsRequired();
 
@@ -90,11 +95,11 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid,
         changesBuilder.Property(c => c.At).HasDefaultValue(DateTime.UtcNow);
         changesBuilder.HasOne(c => c.Password)
             .WithMany(s => s.ActivityLog)
-            .HasForeignKey(c => c.PasswordId)
+            .HasForeignKey(c => c.PasswordId).IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
         changesBuilder.HasOne(c => c.AppUser)
             .WithMany(s => s.ChangerHistory)
-            .HasForeignKey(c => c.AppUsreId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(c => c.AppUsreId).IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
