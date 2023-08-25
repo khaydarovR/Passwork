@@ -4,6 +4,8 @@ using Passwork.Server.Application.Interfaces;
 using Passwork.Server.DAL;
 using Passwork.Server.Domain;
 using Passwork.Server.Domain.Entity;
+using Passwork.Shared.Dto;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Passwork.Server.Application.Services;
@@ -13,12 +15,14 @@ public class SeedingService : ISeedingService
     private readonly AppDbContext _dbContext;
     private readonly ILogger _logger;
     private readonly UserManager<AppUser> _userManager;
+    private readonly IAccountService _accountService;
 
-    public SeedingService(AppDbContext dbContext, ILogger<SeedingService> logger, UserManager<AppUser> userManager)
+    public SeedingService(AppDbContext dbContext, ILogger<SeedingService> logger, UserManager<AppUser> userManager, IAccountService accountService)
     {
         this._dbContext = dbContext;
         this._logger = logger;
         this._userManager = userManager;
+        this._accountService = accountService;
     }
     public void DbInit(bool isSeed)
     {
@@ -30,7 +34,31 @@ public class SeedingService : ISeedingService
 
         InitAppUserWithClaims().Wait();
         InitCompany().Wait();
+        InitUsers(50).Wait();
+    }
 
+    private async Task InitUsers(int amount)
+    {
+        if (_dbContext.AppUsers.Any(u => u.Email == "t0@ma"))
+        {
+            _logger.LogWarning("Default users is exists");
+            return;
+        }
+
+        var newUsers = new List<UserRegisterDto>();
+        for (int i = 0; i < amount; i++)
+        {
+            var email = $"t{i}@ma";
+            newUsers.Add(new UserRegisterDto
+            {
+                Email = email,
+                MasterPassword = $"masterPas{i}",
+                Password = $"tpas{i}"
+            });
+
+            _accountService.RegisterNewUser(newUsers[i]);
+        }
+        _logger.LogDebug("Users added to the database");
     }
 
     private async Task InitCompany()

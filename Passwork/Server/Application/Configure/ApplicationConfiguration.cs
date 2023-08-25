@@ -33,8 +33,8 @@ public static class ApplicationConfiguration
             .AddUserManager<UserManager<AppUser>>()
             .AddDefaultTokenProviders();
 
-        services.AddScoped<ISeedingService, SeedingService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<ISeedingService, SeedingService>();
         services.AddSignalR(hubOpt =>
         {
             hubOpt.ClientTimeoutInterval = TimeSpan.FromHours(2);

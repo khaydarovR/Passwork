@@ -25,7 +25,7 @@ try
 
     // NLog: Setup NLog for Dependency injection
     builder.Logging.ClearProviders();
-    builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+    //builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
     builder.Logging.AddNLog();
 
     var app = builder.Build();
@@ -57,14 +57,14 @@ try
 
     app.MapHub<ApiHub>("/companyhub");
 
-    //app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DropCreateDb();
+    app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(true);
     app.UseAuthentication(); ;
 
     app.Run();
 }
 catch(Exception ex)
 {
-    logger.Error(ex, "Ошибка при запуске программы");
+    logger.Error(ex, "init app errror");
     throw;
 }
 finally

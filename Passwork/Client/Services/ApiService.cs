@@ -150,7 +150,7 @@ public class ApiService
 
     public async Task<string> LoadConnectionString(Guid safeId)
     {
-        var res = await _httpClient.GetStringAsync($"/api/Safe/constring?safeId={safeId}")?? "Ошибка";
-        return res;
+        var res = await _httpClient.GetAsync($"/api/Safe/constring?safeId={safeId}");
+        return res.IsSuccessStatusCode ? await res.Content.ReadAsStringAsync() : "Ошибка";
     }
 }

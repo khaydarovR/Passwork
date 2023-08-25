@@ -9,6 +9,7 @@
 @inject HttpClient HttpClient
 @inject AuthenticationManager AuthManager
 @inject TokenService TokenService
+@inject ApiService ApiService
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -60,7 +61,7 @@
     protected override async Task OnInitializedAsync()
     {
         #warning Только для дебаг режима
-        AuthManager.Logout();
+        //AuthManager.Logout();
         await CustomAuthStateProvider.GetAuthenticationStateAsync();
         base.OnInitialized();
     }

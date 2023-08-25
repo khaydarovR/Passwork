@@ -268,6 +268,10 @@ namespace Passwork.Server.Controllers
         [HttpGet("Constring")]
         public async Task<ActionResult<string>> ConnectionString([FromQuery] Guid safeId)
         {
+            if (safeId == Guid.Empty)
+            {
+                return BadRequest("Не указан сейф");
+            }
             var claimsPrincipal = HttpContext.User;
             var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
 

@@ -26,7 +26,9 @@
                     <MudNavMenu Class="mud-width-full">
                         @if(ApiService.OwnerCompanies is not null)
                         {
-                            <MudText Typo="Typo.h6" Class="px-1">Ваши Компании</MudText>
+                            <MudText Inline Typo="Typo.h6" Class="px-1">
+                                Ваши Компании
+                            </MudText>
                             <MudDivider Class="my-2" />
                             @foreach (var com in ApiService.OwnerCompanies)
                             {
@@ -42,6 +44,9 @@
                                     }
                                     <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
                                         Новый сейф
+                                    </MudNavLink>
+                                    <MudNavLink OnClick="@(() => GetConnectionString())" Icon="@Icons.Custom.Brands.Telegram" IconColor="Color.Primary">
+                                        Подключить бота
                                     </MudNavLink>
                                 </MudNavGroup>
                             }
@@ -84,7 +89,7 @@
             </AuthorizeView>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="12" sm="4">
         <MudPaper Class="d-flex align-right justify-right mud-width-full py-8">
             <AuthorizeView>
                 <Authorized>
@@ -97,7 +102,6 @@
                             <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
                                 Создать пароль
                             </MudNavLink>
-                            <MudButton OnClick="@(() => GetConnectionString(currentSafeId))" Size="Size.Small" Variant="Variant.Text">Строка подключения к тг боту</MudButton>
                             <MudDialog @bind-IsVisible="conStringVisible">
                                 <TitleContent>
                                     <MudText Typo="Typo.h6">
@@ -134,7 +138,7 @@
             </AuthorizeView>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="6">
+    <MudItem xs="12" sm="5">
         <AuthorizeView>
             <Authorized>
                 <MudCard Outlined="false" Class="d-flex align-left  mud-width-full py-8">
@@ -258,10 +262,10 @@
         });
     }
 
-    async Task GetConnectionString(Guid safeId)
+    async Task GetConnectionString()
     {
         conStringVisible = true;
-        botConnectionString = await ApiService.LoadConnectionString(safeId);
+        botConnectionString = await ApiService.LoadConnectionString(Guid.Empty);
         StateHasChanged();
     }
 
