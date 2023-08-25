@@ -1,16 +1,19 @@
+﻿
 using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Extensions.Logging;
 using Passwork.Server.Application.Configure;
 using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services.SignalR;
+using System.Text;
 using System.Text.Json.Serialization;
-
+Console.OutputEncoding = Encoding.UTF8;
 var logger = LogManager.Setup()
     .LoadConfigurationFromFile()
     .GetCurrentClassLogger();
 
 logger.Debug("init main");
+Console.WriteLine("test rus русксий буквы Ё");
 
 try
 {
@@ -21,6 +24,12 @@ try
     builder.Services.AddRazorPages();
 
     builder.Services.AddMy(builder.Configuration);
+
+    // добавление кэширования
+    builder.Services.AddStackExchangeRedisCache(options => {
+        options.Configuration = "localhost:6379";
+        options.InstanceName = "local";
+    });
 
 
     // NLog: Setup NLog for Dependency injection
