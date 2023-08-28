@@ -43,6 +43,7 @@ public static class ApplicationConfiguration
         services.AddSingleton<ApiHub>();
         services.AddSingleton<TgBotService>();
         services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<IDeferredInviter, DeferredInviterService>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

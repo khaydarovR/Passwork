@@ -25,7 +25,6 @@ try
 
     builder.Services.AddMy(builder.Configuration);
 
-    // добавление кэширования
     builder.Services.AddStackExchangeRedisCache(options => {
         options.Configuration = "localhost:6379";
         options.InstanceName = "local";

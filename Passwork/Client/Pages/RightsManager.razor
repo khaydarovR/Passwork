@@ -179,11 +179,7 @@
         var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
         if(response == false)
         {
-            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
-        }
-        else
-        {
-            Snackbar.Add("В сейф добавлен новый пользователь", Severity.Success);
+            Snackbar.Add(ApiService.CurrentMessage.Message, Severity.Warning);
         }
     }
 
@@ -198,7 +194,7 @@
         var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
         if (response == false)
         {
-            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+            Snackbar.Add(ApiService.CurrentMessage.Message, Severity.Warning);
         }
         else
         {

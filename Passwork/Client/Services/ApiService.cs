@@ -10,7 +10,7 @@ public class ApiService
     private readonly HttpClient _httpClient;
     private readonly NavigationManager _navigationManager;
     public event Action OnCompanyUpdated;
-    public ErrorMessage CurrentErrorMessage = new();
+    public ErrorMessage CurrentMessage = new();
     public List<CompaniesVm> Companies { get; set; } = null!;
     public List<CompaniesVm> OwnerCompanies { get; set; } = null!;
     public List<TagVm> Tags { get; set; } = new();
@@ -30,7 +30,7 @@ public class ApiService
         var response = await _httpClient.PostAsJsonAsync(url, data);
         if(response.IsSuccessStatusCode == false)
         {
-            CurrentErrorMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>()?? new ErrorMessage { Message = "Ошибка"};
+            CurrentMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>()?? new ErrorMessage { Message = "Ошибка"};
         }
         return response.IsSuccessStatusCode;
     }
@@ -90,7 +90,7 @@ public class ApiService
         }
         else
         {
-            CurrentErrorMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage();
+            CurrentMessage = await response.Content.ReadFromJsonAsync<ErrorMessage>() ?? new ErrorMessage();
             return false;
         }
     }

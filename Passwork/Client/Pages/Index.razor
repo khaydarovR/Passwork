@@ -245,7 +245,7 @@
             }
             else
             {
-                Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+                Snackbar.Add(ApiService.CurrentMessage.Message, Severity.Warning);
                 passwords = new();
             }
             StateHasChanged();
@@ -279,7 +279,7 @@
         }
         else
         {
-            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+            Snackbar.Add(ApiService.CurrentMessage.Message, Severity.Warning);
         }
     }
 
@@ -344,7 +344,7 @@
                 currentSafeId = Guid.Empty;
                 currentSafeName = string.Empty;
                 passwords = new();
-                Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+                Snackbar.Add(ApiService.CurrentMessage.Message, Severity.Warning);
             }
             StateHasChanged();
             HubClient.OnPassworUpdated += HandlePasswordUpdated;

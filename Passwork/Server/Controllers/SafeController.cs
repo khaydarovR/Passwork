@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Passwork.Server.Application.Interfaces;
 using Passwork.Server.Application.Services;
 using Passwork.Server.Application.Services.SignalR;
 using Passwork.Server.DAL;
@@ -26,13 +27,19 @@ namespace Passwork.Server.Controllers
         private readonly ApiHub _apiHub;
         private readonly TgBotService _tgbot;
         private readonly ILogger<SafeController> _logger;
+        private readonly IDeferredInviter _inviter;
 
-        public SafeController(AppDbContext context, ApiHub apiHub, TgBotService tgbot, ILogger<SafeController> logger)
+        public SafeController(AppDbContext context, 
+            ApiHub apiHub, 
+            TgBotService tgbot, 
+            ILogger<SafeController> logger,
+            IDeferredInviter inviter)
         {
             _context = context;
             _apiHub = apiHub;
             _tgbot = tgbot;
             _logger = logger;
+            _inviter = inviter;
         }
 
 
@@ -101,7 +108,9 @@ namespace Passwork.Server.Controllers
                 .FirstOrDefaultAsync(u => u.Email == addUserToSafeDto.UserEmail);
             if (newSafeUser == null)
             {
-                return BadRequest(new ErrorMessage { Message = $"Пользователь c почтой {addUserToSafeDto.UserEmail} не зарегистрирован" });
+                await _inviter.WaitInvite(addUserToSafeDto.UserEmail, addUserToSafeDto.SafeId.ToString(), TimeSpan.FromDays(1));
+                return BadRequest(new ErrorMessage { 
+                    Message = $"{addUserToSafeDto.UserEmail} будет добавлен в сейф после регистраци" });
             }
 
 

@@ -20,20 +20,22 @@ public class AccountService : IAccountService
     private readonly SignInManager<AppUser> _signInManager;
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly ILogger<AccountService> _logger;
-
+    private readonly IDeferredInviter _inviter;
 
     public AccountService(
         UserManager<AppUser> userManager,
         AppDbContext context,
         SignInManager<AppUser> signInManager,
         RoleManager<IdentityRole<Guid>> roleManager,
-        ILogger<AccountService> logger)
+        ILogger<AccountService> logger,
+        IDeferredInviter inviter)
     {
         _userManager = userManager;
         _context = context;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _logger = logger;
+        _inviter = inviter;
     }
 
 
@@ -51,12 +53,32 @@ public class AccountService : IAccountService
             await _userManager.AddClaimsAsync(newUserDb, claims);
             var jwt = CreateJwt(claims);
             _logger.LogInformation("Created new app user", newUserDb);
+
+            TryAddToSafeNewUser(newUserDb);
             return new ServiceResponse<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
         }
 
         var badResponse = new ServiceResponse<string>(false);
         badResponse.ErrorMessage = new ErrorMessage(result.Errors.First().Description);
         return badResponse;
+    }
+
+    private async void TryAddToSafeNewUser(AppUser newUser)
+    {
+        if (await _inviter.ValueIsExists(newUser.Email) == false)
+        {
+            return;
+        }
+
+        var safeId = await _inviter.GetSafeAndRemoveValue(newUser.Email);
+        var addToSafe = new SafeUsers()
+        {
+            AppUser = newUser,
+            SafeId = Guid.Parse(safeId),
+            Right = RightEnum.Visible
+        };
+        _context.SafeUsers.Add(addToSafe);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<ServiceResponse<string>> LoginUser(UserLoginDto model)
