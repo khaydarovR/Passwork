@@ -8,7 +8,7 @@ using Passwork.Shared.SignalR;
 public class HubClient
 {
     private HubConnection _hubConnection;
-    private readonly CustomAuthStateProvider _authenticationStateProvider;
+    private readonly CustomAuthenticationStateProvider _authenticationStateProvider;
     private readonly NavigationManager _navigationManager;
     private bool _isInitialized;
     public event Action OnCloseConnection;
@@ -21,7 +21,7 @@ public class HubClient
         AuthenticationStateProvider authenticationStateProvider, 
         NavigationManager navigationManager)
     {
-        _authenticationStateProvider = (CustomAuthStateProvider)authenticationStateProvider;
+        _authenticationStateProvider = (CustomAuthenticationStateProvider)authenticationStateProvider;
         _navigationManager = navigationManager;
     }
 

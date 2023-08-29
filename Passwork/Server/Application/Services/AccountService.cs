@@ -100,7 +100,10 @@ public class AccountService : IAccountService
     public async Task<ServiceResponse<AppUser>> GetUserDetail(ClaimsPrincipal claimsPrincipal)
     {
         var result = await _userManager.GetUserAsync(claimsPrincipal);
-
+        if (result is not null)
+        {
+            return new ServiceResponse<AppUser>(result);
+        }
         return new ServiceResponse<AppUser>("Ошибка в куках, зарегистрируйтесть заного", false);
     }
 

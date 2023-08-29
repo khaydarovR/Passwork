@@ -12,10 +12,8 @@ namespace Passwork.Client.Services;
 public class AuthenticationManager
 {
     private readonly HttpClient _httpClient;
-    private readonly CustomAuthStateProvider _authenticationStateProvider;
-    private readonly TokenService _authenticationService;
+    private readonly CustomAuthenticationStateProvider _authenticationStateProvider;
     private readonly HubClient _hubClient;
-    private readonly ApiService _apiService;
 
     public string ErrorMessage { get; set; } = string.Empty;
 
@@ -27,10 +25,8 @@ public class AuthenticationManager
         ApiService apiService)
     {
         _httpClient = httpClient;
-        _authenticationStateProvider = (CustomAuthStateProvider)authenticationStateProvider;
-        _authenticationService = authenticationService;
+        _authenticationStateProvider = (CustomAuthenticationStateProvider)authenticationStateProvider;
         this._hubClient = hubClient;
-        _apiService = apiService;
     }
 
     /// <summary>
@@ -39,14 +35,14 @@ public class AuthenticationManager
     /// <param name="request"><see cref="LoginRequestDto"/></param>
     public async Task<bool> Login(UserLoginDto request)
     {
-        var response = await _httpClient.PostAsJsonAsync(Routes.Account.Login, request);
+        var response = await _httpClient.PostAsJsonAsync("api/Account/CLogin", request);
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
             return false;
         }
-        var token = await response.Content.ReadAsStringAsync();
-        _authenticationService.SetToken(token);
+        //var token = await response.Content.ReadAsStringAsync();
+        //_authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
         await _hubClient.StartAsync();
         return true;
@@ -65,8 +61,6 @@ public class AuthenticationManager
             ErrorMessage = (await response.Content.ReadFromJsonAsync<ErrorMessage>())?.Message ?? "Ошибка";
             return false;
         }
-        var token = (await response.Content.ReadAsStringAsync()) ?? string.Empty;
-        _authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
         await _hubClient.StartAsync();
         return true;
@@ -78,7 +72,6 @@ public class AuthenticationManager
     public async Task Logout()
     {
         await _httpClient.PostAsJsonAsync("/api/Account/Logout", true);
-        await _authenticationService.DeleteTokenAsync();
         await _authenticationStateProvider.GetAuthenticationStateAsync();
     }
 }

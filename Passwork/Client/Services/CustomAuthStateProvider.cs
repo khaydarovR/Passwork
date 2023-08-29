@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using IdentityModel.Client;
+using Microsoft.AspNetCore.Components;
+using Passwork.Shared.ViewModels;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -7,76 +10,46 @@ namespace Passwork.Client.Services;
 /// <summary>
 /// Кастомный <see cref="AuthenticationStateProvider"/>.
 /// </summary>
-public class CustomAuthStateProvider : AuthenticationStateProvider
+public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 {
-    private readonly TokenService _authenticationService;
-    private readonly ILogger<CustomAuthStateProvider> _logger;
+    private readonly TokenService _tokenService;
     private readonly NavigationManager _navigationManager;
 
-    public CustomAuthStateProvider(TokenService authenticationService, ILogger<CustomAuthStateProvider> logger, NavigationManager navigationManager)
+
+    private readonly HttpClient _httpClient;
+
+    public CustomAuthenticationStateProvider(HttpClient httpClient, NavigationManager navigationManager)
     {
-        _authenticationService = authenticationService;
-        this._logger = logger;
+        _httpClient = httpClient;
         _navigationManager = navigationManager;
     }
-    /// <summary>
-    /// Получить состояние аутентификации.
-    /// </summary>
-    /// <returns><see cref="Task{TResult}">Task&lt;AuthenticationState&gt;</see></returns>
-    public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+
+    public async override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var state = new AuthenticationState(new ClaimsPrincipal());
-        var token = await _authenticationService.GetTokenAsync();
-        if (!string.IsNullOrEmpty(token))
+        CurrentUser currentUser = null;
+        var authResponse = await _httpClient.GetAsync("api/Account/Current");
+        if (authResponse.IsSuccessStatusCode)
         {
-            try
-            {
-                var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "token");
-                var user = new ClaimsPrincipal(new ClaimsIdentity(identity));
-                state = new AuthenticationState(user);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Error GetAuthenticationStateAsync: " + ex.Message);
-            }
-            _navigationManager.NavigateTo("/");
+            currentUser = await authResponse.Content.ReadFromJsonAsync<CurrentUser>();
+        }
+
+        if (currentUser != null && currentUser.Id != null)
+        {
+            //create a claims
+            var claimEmailAddress = new Claim(ClaimTypes.Email, currentUser.Email);
+            var claimNameIdentifier = new Claim(ClaimTypes.NameIdentifier, currentUser.Id);
+            //create claimsIdentity
+            var claimsIdentity = new ClaimsIdentity(new[] { claimEmailAddress, claimNameIdentifier }, "serverAuth");
+            //create claimsPrincipal
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            var newAuthState = new AuthenticationState(claimsPrincipal);
+            NotifyAuthenticationStateChanged(Task.FromResult(newAuthState));
+            return newAuthState;
         }
         else
         {
-            _navigationManager.NavigateTo("/login");
+            _navigationManager.NavigateTo("./Login");
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
-        NotifyAuthenticationStateChanged(Task.FromResult(state));
-
-        return state;
-    }
-
-    /// <summary>
-    /// Парсер клэймов из Json Web Token.
-    /// </summary>
-    /// <param name="jwt">Json Web Token.</param>
-    /// <returns><see cref="List{T}">List&lt;Claim&gt;</see></returns>
-    public static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
-    {
-        var payload = jwt.Split('.')[1];
-        var jsonBytes = ParseBase64WithoutPadding(payload);
-        var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
-
-        return keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString()));
-    }
-
-    /// <summary>
-    /// Парсинг токена в байтах.
-    /// </summary>
-    /// <param name="base64"></param>
-    /// <returns></returns>
-    private static byte[] ParseBase64WithoutPadding(string base64)
-    {
-        switch (base64.Length % 4)
-        {
-            case 2: base64 += "=="; break;
-            case 3: base64 += "="; break;
-        }
-
-        return Convert.FromBase64String(base64);
     }
 }

@@ -206,7 +206,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
+        var provider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         var authenticated = await provider.GetAuthenticationStateAsync();
         bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
         if ((isAuthenticated is not null) && isAuthenticated == true)
@@ -324,7 +324,7 @@
 
     async Task SelectSafe(SafeVm selectedSafe, string comName)
     {
-        var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
+        var provider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         var authenticated = await provider.GetAuthenticationStateAsync();
         bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
         if ((isAuthenticated is not null) && isAuthenticated == true)

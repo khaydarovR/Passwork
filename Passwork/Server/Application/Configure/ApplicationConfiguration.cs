@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -45,40 +46,16 @@ public static class ApplicationConfiguration
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IDeferredInviter, DeferredInviterService>();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-                JwtOptions.SetKey(config["JWT_KEY"]);
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = JwtOptions.ISSUER,
-                    ValidateAudience = true,
-                    ValidAudience = JwtOptions.AUDIENCE,
-                    ValidateLifetime = true,
-                    IssuerSigningKey = JwtOptions.GetSymmetricSecurityKey(),
-                    ValidateIssuerSigningKey = true
-                };
-
-                options.Events = new JwtBearerEvents()
-                {
-                    OnMessageReceived = context =>
-                    {
-                        if (context.Request.Path.ToString().StartsWith("/companyhub/"))
-                            context.Token = context.Request.Query["access_token"];
-                        return Task.CompletedTask;
-                    },
-                };
-            });
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie();
 
         services.AddAuthorization((opt) =>
         {
             opt.AddPolicy("Admin", p =>
-                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())
-                                        || x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())));
+                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())));
             opt.AddPolicy("User", p =>
-                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())));
+                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())
+                                    || x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())));
         });
 
         services.Configure<IdentityOptions>(options =>

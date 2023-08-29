@@ -66,7 +66,7 @@ try
     app.MapHub<ApiHub>("/companyhub");
 
     app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(true);
-    app.UseAuthentication(); ;
+    app.UseAuthentication();
 
     app.Run();
 }
