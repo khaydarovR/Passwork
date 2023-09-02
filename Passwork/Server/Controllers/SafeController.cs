@@ -108,11 +108,20 @@ namespace Passwork.Server.Controllers
                 .FirstOrDefaultAsync(u => u.Email == addUserToSafeDto.UserEmail);
             if (newSafeUser == null)
             {
-                await _inviter.WaitInvite(addUserToSafeDto.UserEmail, addUserToSafeDto.SafeId.ToString(), TimeSpan.FromDays(1));
-                return BadRequest(new ErrorMessage { 
-                    Message = $"{addUserToSafeDto.UserEmail} будет добавлен в сейф после регистраци" });
-            }
+                try
+                {
+                    await _inviter.WaitInvite(addUserToSafeDto.UserEmail, addUserToSafeDto.SafeId.ToString(), TimeSpan.FromDays(1));
+                    return BadRequest(new ErrorMessage
+                    {
+                        Message = $"{addUserToSafeDto.UserEmail} будет добавлен в сейф после регистраци"
+                    });
+                }
+                catch (Exception e)
+                {
+                    return BadRequest(new ErrorMessage { Message = "Сервис для отложенного приглашения не доступен" });
+                }
 
+            }
 
             var claimsPrincipal = HttpContext.User;
             var userId = claimsPrincipal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
