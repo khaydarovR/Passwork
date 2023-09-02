@@ -1,7 +1,7 @@
 ﻿@page "/register"
 @inject AuthenticationManager AuthenticationManager
 @inject NavigationManager NavigationManager
-@inject IToastService ToastService
+@inject ISnackbar Snackbar
 
 @using System.ComponentModel.DataAnnotations
 @using Blazored.Toast.Services;
@@ -35,7 +35,7 @@
             </MudItem>
             <MudItem xs="12" sm="5">
                 <MudPaper Class="pa-4 mud-height-full">
-                    <MudText Typo="Typo.subtitle2">Validation Summary</MudText>
+                    <MudText Typo="Typo.subtitle2">Ошибки валидации</MudText>
                     @if (success)
                     {
                         <MudText Color="Color.Success">Success</MudText>
@@ -50,7 +50,7 @@
             </MudItem>
             <MudItem xs="12">
                 <MudText Typo="Typo.body2" Align="Align.Center">
-                    Fill out the form correctly to see the success message.
+                    Рекомендуется сохранить пароли в бумажном ввиде
                 </MudText>
             </MudItem>
         </MudGrid>
@@ -78,8 +78,7 @@
         }
         else
         {
-            //ToastService.ShowError(AuthenticationManager.ErrorMessage, ErrorType.RegistrationError.ToString());
-            AuthenticationManager.ErrorMessage = string.Empty;
+            Snackbar.Add(AuthenticationManager.ErrorMessage);
             isLoad = false;
         }
         StateHasChanged();

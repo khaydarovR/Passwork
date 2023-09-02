@@ -8,24 +8,20 @@
 @using Blazored.Toast.Services;
 @using Passwork.Client.Utils;
 
-<MudText Align="Align.Center" Typo="Typo.body2" Color="Color.Primary">Для работы с сайтом требуеться авторизация</MudText>
+<MudText Align="Align.Center" Typo="Typo.body2" Color="Color.Surface">Для работы с сайтом требуется авторизация</MudText>
 <MudDialog>
     <DialogContent>
         <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
             <MudGrid>
-                <MudItem xs="12" sm="7">
+                <MudItem xs="12" sm="12">
                     <MudCard>
                         <MudCardContent>
                             <MudTextField Label="Email" Class="mt-3"
                             @bind-Value="model.Email" For="@(() => model.Email)" />
+
                             <MudTextField Label="Password" HelperText="Ваш пароль" Class="mt-3"
                             @bind-Value="model.Password" For="@(() => model.Password)" InputType="InputType.Password" />
-                            
-                            <MudTextField Label="Мастер пароль" HelperText="Ключ для шифрования ваших данных"
-                                          Class="mt-3" @bind-Value="model.MasterPassword" For="@(() => model.MasterPassword)" />
-
-                            <MudCheckBox T="bool" Label="Запомнить меня" @bind-Value="model.RememberMe" For="@(() => model.RememberMe)" />
                         </MudCardContent>
                         <MudCardActions>
                             <ButtonWait @bind-IsLoad="@isLoad">
@@ -34,16 +30,12 @@
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <MudAlert hidden="@isLoad" Severity="Severity.Error">@errorMessage</MudAlert>
-                }
             </MudGrid>
         </EditForm>
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Secondary" OnClick="@NavigateToRegisterPage">Создать новый аккаунт</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="@(() => NavigationManager.NavigateTo("/register"))">Создать новый аккаунт</MudButton>
         <MudSpacer/>
         <MudButton OnClick="Cancel">Отмена</MudButton>
     </DialogActions>
@@ -54,7 +46,6 @@
     UserLoginDto model = new UserLoginDto();
     bool success;
     bool isLoad = false;
-    string errorMessage = null;
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     void Cancel() => MudDialog.Cancel();
@@ -69,34 +60,16 @@
 
             if (await AuthenticationManager.Login(model))
             {
-                AddSnackbarSuc();
+                Snackbar.Add("Успешно зашли", Severity.Success);
                 NavigationManager.NavigateTo("/");
             }
             else
             {
-                //ToastService.ShowError(AuthenticationManager.ErrorMessage, ErrorType.RegistrationError.ToString());
-                AuthenticationManager.ErrorMessage = string.Empty;
-                errorMessage = "Неверные данные";
                 isLoad = false;
-                AddSnackbarError();
+                Snackbar.Add("Не верный логин или пароль", Severity.Error);
             }
 
             StateHasChanged();
         }
-    }
-
-    private void AddSnackbarSuc()
-    {
-        Snackbar.Add("Успешно зашли", Severity.Success);
-    }
-
-    private void AddSnackbarError()
-    {
-        Snackbar.Add("Ошибка входа", Severity.Error);
-    }
-
-    void NavigateToRegisterPage()
-    {
-        NavigationManager.NavigateTo("/register");
     }
 }

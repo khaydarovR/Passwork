@@ -31,6 +31,7 @@ public static class ApplicationConfiguration
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager<SignInManager<AppUser>>()
             .AddUserManager<UserManager<AppUser>>()
+            .AddErrorDescriber<IdentityMessageRu>()
             .AddDefaultTokenProviders();
 
         services.AddScoped<IAccountService, AccountService>();

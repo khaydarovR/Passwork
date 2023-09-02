@@ -43,6 +43,7 @@ public class AuthenticationManager
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
+            ErrorMessage = (await response.Content.ReadFromJsonAsync<ErrorMessage>())?.Message ?? "Ошибка на сервере";
             return false;
         }
         var token = await response.Content.ReadAsStringAsync();
@@ -62,7 +63,7 @@ public class AuthenticationManager
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
-            ErrorMessage = (await response.Content.ReadFromJsonAsync<ErrorMessage>())?.Message ?? "Ошибка";
+            ErrorMessage = (await response.Content.ReadFromJsonAsync<ErrorMessage>())?.Message ?? "Ошибка на сервере";
             return false;
         }
         var token = (await response.Content.ReadAsStringAsync()) ?? string.Empty;

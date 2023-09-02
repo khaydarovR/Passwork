@@ -84,7 +84,7 @@ public class AccountService : IAccountService
     public async Task<ServiceResponse<string>> LoginUser(UserLoginDto model)
     {
         var result = await _signInManager.PasswordSignInAsync
-            (model.Email, model.Password, model.RememberMe, false);
+            (model.Email, model.Password, true, false);
 
         if (result.Succeeded)
         {

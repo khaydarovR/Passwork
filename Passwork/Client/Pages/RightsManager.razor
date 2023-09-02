@@ -30,7 +30,7 @@
                             <MudSpacer />
                             <MudTextField @bind-Value="globalSearch" Placeholder="Поиск" Adornment="Adornment.Start"
                                           AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="ms-1"></MudTextField>
-                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => TrySendInvite(globalSearch))">Глобальный поиск</MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => TrySendInvite(globalSearch))">Пригласить</MudButton>
                         </ToolBarContent>
                         <RowTemplate Context="table">
                             <MudTd DataLabel="Email">@table.Email</MudTd>

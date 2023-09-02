@@ -20,7 +20,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         _navigationManager = navigationManager;
     }
     /// <summary>
-    /// Получить состояние аутентификации.
+    /// Получить\обновить состояние аутентификации.
     /// </summary>
     /// <returns><see cref="Task{TResult}">Task&lt;AuthenticationState&gt;</see></returns>
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
