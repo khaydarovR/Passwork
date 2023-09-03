@@ -70,14 +70,20 @@ public class AccountService : IAccountService
             return;
         }
 
-        var safeId = await _inviter.GetSafeAndRemoveValue(newUser.Email);
-        var addToSafe = new SafeUsers()
+        var safeIds = await _inviter.GetSafeIdsAndRemoveValues(newUser.Email);
+        List<SafeUsers> safesForAdd = new List<SafeUsers>();
+
+        foreach (var safeId in safeIds)
         {
-            AppUser = newUser,
-            SafeId = Guid.Parse(safeId),
-            Right = RightEnum.Visible
-        };
-        _context.SafeUsers.Add(addToSafe);
+            safesForAdd.Add(new SafeUsers
+            {
+                AppUser = newUser,
+                Right = RightEnum.Visible,
+                SafeId = Guid.Parse(safeId),
+            });
+        }
+
+        _context.SafeUsers.AddRange(safesForAdd);
         await _context.SaveChangesAsync();
     }
 

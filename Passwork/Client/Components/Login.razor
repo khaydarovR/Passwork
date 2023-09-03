@@ -8,7 +8,7 @@
 @using Blazored.Toast.Services;
 @using Passwork.Client.Utils;
 
-<MudText Align="Align.Center" Typo="Typo.body2" Color="Color.Surface">Для работы с сайтом требуется авторизация</MudText>
+<MudText Align="Align.Center" Typo="Typo.body2" Color="Color.Surface">Требуется авторизация</MudText>
 <MudDialog>
     <DialogContent>
         <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
@@ -27,18 +27,13 @@
                             <ButtonWait @bind-IsLoad="@isLoad">
                                 Войти
                             </ButtonWait>
+                            <MudButton Color="Color.Secondary" OnClick="@(() => NavigationManager.NavigateTo("/register"))">Регистрация</MudButton>
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
             </MudGrid>
         </EditForm>
     </DialogContent>
-
-    <DialogActions>
-        <MudButton Color="Color.Secondary" OnClick="@(() => NavigationManager.NavigateTo("/register"))">Создать новый аккаунт</MudButton>
-        <MudSpacer/>
-        <MudButton OnClick="Cancel">Отмена</MudButton>
-    </DialogActions>
 </MudDialog>
 
 

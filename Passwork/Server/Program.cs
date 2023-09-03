@@ -4,6 +4,7 @@ using NLog;
 using NLog.Extensions.Logging;
 using Passwork.Server.Application.Configure;
 using Passwork.Server.Application.Interfaces;
+using Passwork.Server.Application.Services;
 using Passwork.Server.Application.Services.SignalR;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -13,7 +14,7 @@ var logger = LogManager.Setup()
     .GetCurrentClassLogger();
 
 logger.Debug("init main");
-Console.WriteLine("test rus русксий буквы Ё");
+Console.WriteLine("Test - Тест");
 
 try
 {
@@ -23,7 +24,14 @@ try
         .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
     builder.Services.AddRazorPages();
 
-    builder.Services.AddMy(builder.Configuration);
+    builder.Services.ConfigureServices(builder.Configuration);
+
+    builder.Services.AddScoped<IAccountService, AccountService>();
+    builder.Services.AddScoped<ISeedingService, SeedingService>();
+    builder.Services.AddSingleton<ApiHub>();
+    builder.Services.AddSingleton<TgBotService>();
+    builder.Services.AddScoped<IPasswordService, PasswordService>();
+    builder.Services.AddScoped<IDeferredInviter, DeferredInviterService>();
 
     builder.Services.AddStackExchangeRedisCache(options => {
         options.Configuration = "localhost:6379";
@@ -33,7 +41,6 @@ try
 
     // NLog: Setup NLog for Dependency injection
     builder.Logging.ClearProviders();
-    //builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
     builder.Logging.AddNLog();
 
     var app = builder.Build();
@@ -66,7 +73,7 @@ try
     app.MapHub<ApiHub>("/companyhub");
 
     app.Services.CreateScope().ServiceProvider.GetService<ISeedingService>()!.DbInit(true);
-    app.UseAuthentication(); ;
+    app.UseAuthentication();
 
     app.Run();
 }

@@ -24,7 +24,7 @@
             <AuthorizeView>
                 <Authorized>
                     <MudNavMenu Class="mud-width-full">
-                        @if(ApiService.OwnerCompanies is not null)
+                        @if(ApiService.OwnerCompanies is not null && ApiService.OwnerCompanies?.Count() != 0)
                         {
                             <MudText Inline Typo="Typo.h6" Class="px-1">
                                 Ваши Компании
@@ -50,10 +50,6 @@
                                     </MudNavLink>
                                 </MudNavGroup>
                             }
-                        }
-                        else
-                        {
-                            <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
                         }
                         <MudText Typo="Typo.h6" Class="px-1">Прикреплены</MudText>
                         <MudDivider Class="my-2" />

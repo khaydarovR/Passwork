@@ -15,7 +15,7 @@ namespace Passwork.Server.Application.Configure;
 
 public static class ApplicationConfiguration
 {
-    public static IServiceCollection AddMy(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration config)
     {
         services.AddDbContext<AppDbContext>(opt =>
         {
@@ -34,17 +34,12 @@ public static class ApplicationConfiguration
             .AddErrorDescriber<IdentityMessageRu>()
             .AddDefaultTokenProviders();
 
-        services.AddScoped<IAccountService, AccountService>();
-        services.AddScoped<ISeedingService, SeedingService>();
         services.AddSignalR(hubOpt =>
         {
             hubOpt.ClientTimeoutInterval = TimeSpan.FromHours(2);
             hubOpt.EnableDetailedErrors = true;
         });
-        services.AddSingleton<ApiHub>();
-        services.AddSingleton<TgBotService>();
-        services.AddScoped<IPasswordService, PasswordService>();
-        services.AddScoped<IDeferredInviter, DeferredInviterService>();
+
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

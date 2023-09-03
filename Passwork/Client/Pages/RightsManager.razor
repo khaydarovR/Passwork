@@ -22,6 +22,8 @@
             <MudGrid>
                 <MudItem xs="12" sm="5">
                     <MudText Typo="Typo.h6" Class="ms-1">Пользователи компани</MudText>
+                    <MudText Typo="Typo.body2" Class="ms-1">Приглашение в сейф по Email действует в течении 1 часа</MudText>
+                    <MudText Typo="Typo.overline" Class="ms-1">Пользователь должен зарегистрироваться в течении этого времени</MudText>
                     <MudDivider />
                     <MudTable Class="mt-5" Items="@companyUsers" Dense="false" Hover="true" Bordered="false" Striped="false"
                               Filter="new Func<ComUserVm,bool>(FilterComUsers)" @bind-SelectedItem="selectedComUser">

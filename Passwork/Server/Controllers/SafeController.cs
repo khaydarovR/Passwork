@@ -113,7 +113,7 @@ namespace Passwork.Server.Controllers
                     await _inviter.WaitInvite(addUserToSafeDto.UserEmail, addUserToSafeDto.SafeId.ToString(), TimeSpan.FromDays(1));
                     return BadRequest(new ErrorMessage
                     {
-                        Message = $"{addUserToSafeDto.UserEmail} будет добавлен в сейф после регистраци"
+                        Message = $"[Отложенное добавление]{addUserToSafeDto.UserEmail} будет добавлен в сейф после регистрации"
                     });
                 }
                 catch (Exception e)
