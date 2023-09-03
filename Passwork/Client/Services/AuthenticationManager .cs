@@ -49,7 +49,6 @@ public class AuthenticationManager
         var token = await response.Content.ReadAsStringAsync();
         _authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
-        await _hubClient.StartAsync();
         return true;
     }
 
@@ -69,7 +68,6 @@ public class AuthenticationManager
         var token = (await response.Content.ReadAsStringAsync()) ?? string.Empty;
         _authenticationService.SetToken(token);
         await _authenticationStateProvider.GetAuthenticationStateAsync();
-        await _hubClient.StartAsync();
         return true;
     }
 
@@ -78,7 +76,6 @@ public class AuthenticationManager
     /// </summary>
     public async Task Logout()
     {
-        await _httpClient.PostAsJsonAsync("/api/Account/Logout", true);
         await _authenticationService.DeleteTokenAsync();
         await _authenticationStateProvider.GetAuthenticationStateAsync();
     }

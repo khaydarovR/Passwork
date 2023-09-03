@@ -41,10 +41,16 @@ public static class ApplicationConfiguration
         });
 
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        services.AddAuthentication(opt =>
+        {
+            opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            opt.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
             {
+#warning true в проде, для защиты токена
                 options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
                 JwtOptions.SetKey(config["JWT_KEY"]);
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -71,10 +77,10 @@ public static class ApplicationConfiguration
         services.AddAuthorization((opt) =>
         {
             opt.AddPolicy("Admin", p =>
-                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())
-                                        || x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())));
+                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())));
             opt.AddPolicy("User", p =>
-                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())));
+                p.RequireAssertion(x => x.User.HasClaim(ClaimTypes.Role, RoleEmum.User.ToString())
+                                        || x.User.HasClaim(ClaimTypes.Role, RoleEmum.Admin.ToString())));
         });
 
         services.Configure<IdentityOptions>(options =>

@@ -60,12 +60,5 @@ namespace Passwork.Server.Controllers
 
             return BadRequest(response.ErrorMessage);
         }
-
-        [HttpPost("Logout")]
-        public async Task<ActionResult> Logut(bool isLogout)
-        {
-            await _signInManager.SignOutAsync();
-            return Ok();
-        }
     }
 }

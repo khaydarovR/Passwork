@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using MudBlazor;
 using Passwork.Shared.SignalR;
@@ -7,7 +8,7 @@ using System.Security.Claims;
 
 namespace Passwork.Server.Application.Services.SignalR;
 
-[Authorize]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class ApiHub : Microsoft.AspNetCore.SignalR.Hub
 {
     private readonly IHttpContextAccessor _httpContextAccessor;

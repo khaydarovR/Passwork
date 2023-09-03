@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Passwork.Client.Services;
+using Passwork.Client.Utils;
 using Passwork.Shared.SignalR;
 
 public class HubClient
 {
     private HubConnection _hubConnection;
-    private readonly CustomAuthStateProvider _authenticationStateProvider;
     private readonly NavigationManager _navigationManager;
+    private readonly TokenService _tokenService;
     private bool _isInitialized;
     public event Action OnCloseConnection;
 
@@ -18,11 +19,11 @@ public class HubClient
     public event Action OnSafeUsersUpdated;
 
     public HubClient(
-        AuthenticationStateProvider authenticationStateProvider, 
-        NavigationManager navigationManager)
+        NavigationManager navigationManager,
+        TokenService tokenService)
     {
-        _authenticationStateProvider = (CustomAuthStateProvider)authenticationStateProvider;
         _navigationManager = navigationManager;
+        _tokenService = tokenService;
     }
 
     public async Task StartAsync()
@@ -31,17 +32,12 @@ public class HubClient
         {
             return;
         }
-
+#error не работает hub
         _hubConnection = new HubConnectionBuilder()
             .WithUrl("https://localhost:7292/companyhub", options =>
             {
-                Func<Task<string?>>? setToken = async () =>
-                {
-                    var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-                    var accessToken = authState.User.FindFirst("access_token")?.Value;
-                    return accessToken;
-                };
-                options.AccessTokenProvider = setToken;
+                var jwt = _tokenService.GetTokenAsync().Result;
+                options.Headers.Add("Authorization", "Bearer " + jwt.Trim('"'));
             })
             .Build();
 
@@ -69,7 +65,7 @@ public class HubClient
         }
         catch
         {
-            if((await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.IsAuthenticated == false)
+            if(_tokenService.GetTokenAsync().Result == null)
             {
                 _navigationManager.NavigateTo("/register", true);
             }

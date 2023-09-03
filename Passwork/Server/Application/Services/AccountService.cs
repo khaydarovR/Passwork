@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Passwork.Server.Application.Configure;
@@ -47,7 +48,7 @@ public class AccountService : IAccountService
 
         if (result.Succeeded)
         {
-            await _signInManager.SignInAsync(newUser, true);
+            await _signInManager.SignInAsync(newUser, true, JwtBearerDefaults.AuthenticationScheme);
             var newUserDb = await _userManager.Users.SingleAsync(u => u.Email == model.Email);
             var claims = GetClaimsFor(newUserDb);
             await _userManager.AddClaimsAsync(newUserDb, claims);
@@ -89,13 +90,13 @@ public class AccountService : IAccountService
 
     public async Task<ServiceResponse<string>> LoginUser(UserLoginDto model)
     {
-        var result = await _signInManager.PasswordSignInAsync
-            (model.Email, model.Password, true, false);
-
-        if (result.Succeeded)
+        var dbUser = await _userManager.FindByEmailAsync(model.Email);
+        var result = await _userManager.CheckPasswordAsync(dbUser, model.Password);
+        if (result)
         {
-            var userDb = await _userManager.Users.SingleAsync(u => u.Email == model.Email);
-            var claims = await _userManager.GetClaimsAsync(userDb);
+            //await _signInManager.SignInAsync(dbUser, true, JwtBearerDefaults.AuthenticationScheme);
+            var claims = await _userManager.GetClaimsAsync(dbUser);
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, dbUser.Id.ToString()));
             var jwt = CreateJwt(claims.ToList());
             return new ServiceResponse<string>(true) { ResponseModel = new JwtSecurityTokenHandler().WriteToken(jwt) };
         }

@@ -12,12 +12,17 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
     private readonly TokenService _authenticationService;
     private readonly ILogger<CustomAuthStateProvider> _logger;
     private readonly NavigationManager _navigationManager;
+    private readonly HubClient _hubClient;
 
-    public CustomAuthStateProvider(TokenService authenticationService, ILogger<CustomAuthStateProvider> logger, NavigationManager navigationManager)
+    public CustomAuthStateProvider(TokenService authenticationService,
+        ILogger<CustomAuthStateProvider> logger, 
+        NavigationManager navigationManager,
+        HubClient hubClient)
     {
         _authenticationService = authenticationService;
         this._logger = logger;
         _navigationManager = navigationManager;
+        this._hubClient = hubClient;
     }
     /// <summary>
     /// Получить\обновить состояние аутентификации.
@@ -34,6 +39,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
                 var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "token");
                 var user = new ClaimsPrincipal(new ClaimsIdentity(identity));
                 state = new AuthenticationState(user);
+                await _hubClient.StartAsync();
             }
             catch (Exception ex)
             {
