@@ -1,0 +1,89 @@
+﻿@inject ApiService ApiService
+@inject ISnackbar Snackbar
+
+@using Passwork.Shared.ViewModels;
+
+
+<MudDialog>
+    <DialogContent>
+        <MudSelect @bind-Value="@newRightForUsers" T="RightEnumVm" Label="Уровень доступа" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            <MudSelectItem Value="@RightEnumVm.Отсутствует" />
+            <MudSelectItem Value="@RightEnumVm.Смотреть" />
+            <MudSelectItem Value="@RightEnumVm.Читать" />
+            <MudSelectItem Value="@RightEnumVm.Записывать" />
+            <MudSelectItem Value="@RightEnumVm.Приглашать" />
+            <MudSelectItem Value="@RightEnumVm.Удалять" />
+            <MudSelectItem Disabled Value="@RightEnumVm.Владелец" />
+        </MudSelect>
+        
+        <MudList>
+            <MudText>Выбранные пользователи</MudText>
+            @foreach (var user in SafeUsers)
+            {
+                <MudListItem>
+                    @user.Email @user.Right.ToString() [@(user.UserId.ToString()[..3])...@(user.UserId.ToString()[^3..])]
+                </MudListItem>
+                <MudDivider></MudDivider>
+            }
+        </MudList>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Cancel()">Отмена</MudButton>
+        <MudButton Color="Color.Warning" OnClick="UpdateRights">Приминить изминения</MudButton>
+        <MudButton Color="Color.Error" OnClick="RemoveFromSafe">Удалить из сейфа</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public HashSet<SafeUserVm> SafeUsers { get; set; }
+    [Parameter] public Guid SafeId { get; set; }
+
+    private RightEnumVm newRightForUsers;
+
+    async Task UpdateRights()
+    {
+        ChangeUserRightsDto requestModel = new();
+        requestModel.SafeId = SafeId;
+        requestModel.NewRight = newRightForUsers;
+
+        foreach (var user in SafeUsers)
+        {
+            requestModel.UserIds.Add(user.UserId);
+        }
+
+        var response = await ApiService.PostDataAsync<ChangeUserRightsDto>("/api/Safe/ChangeRights", requestModel);
+        if (response == true)
+        {
+            Snackbar.Add("Права успешно изменены", Severity.Info);
+            MudDialog.Close();
+        }
+        else
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+    }
+
+    async Task RemoveFromSafe()
+    {
+        DeleteUsersFromSafeDto requestModel = new();
+        requestModel.SafeId = SafeId;
+        foreach (var user in SafeUsers)
+        {
+            requestModel.UserIds.Add(user.UserId);
+        }
+
+        var response = await ApiService.PostDataAsync<DeleteUsersFromSafeDto>("/api/Safe/DeleteUsers", requestModel);
+        if(response == true)
+        {
+            Snackbar.Add("Успешно удалены", Severity.Info);
+            MudDialog.Close();
+        }
+        else
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+    }
+}

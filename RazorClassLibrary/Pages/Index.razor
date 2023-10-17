@@ -1,0 +1,391 @@
+﻿@page "/"
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject ApiService ApiService
+@inject HubClient HubClient
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Главная</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Class="d-flex align-center justify-left mud-width-full py-2 mt-4">
+            <MudText Typo="Typo.h6" Class="px-4"> / ComPas / @currentComName / @currentSafeName / @pwDetial?.Title  </MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+            <AuthorizeView>
+                <Authorized>
+                    <MudNavMenu Class="mud-width-full">
+                        @if(ApiService.OwnerCompanies is not null)
+                        {
+                            <MudText Typo="Typo.h6" Class="px-1">Ваши Компании</MudText>
+                            <MudDivider Class="my-2" />
+                            @foreach (var com in ApiService.OwnerCompanies)
+                            {
+                                <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
+                                    @if (com.SafeVms != null)
+                                    {
+                                        @foreach (var safe in com.SafeVms)
+                                        {
+                                            <MudNavLink OnClick="@(() => SelectSafe(safe, com.Name))" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Success">
+                                                @safe?.Title
+                                            </MudNavLink>
+                                        }
+                                    }
+                                    <MudNavLink OnClick="@((e) => CreateSafe(com.Id, com.Name))" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
+                                        Новый сейф
+                                    </MudNavLink>
+                                </MudNavGroup>
+                            }
+                        }
+                        else
+                        {
+                            <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                        }
+                        <MudText Typo="Typo.h6" Class="px-1">Прикреплены</MudText>
+                        <MudDivider Class="my-2" />
+                        @if(ApiService.Companies is not null)
+                        {
+                            @foreach (var com in ApiService.Companies)
+                            {
+                                <MudNavGroup Title="@com.Name" Icon="@Icons.Material.Filled.Group" IconColor="Color.Primary" Expanded="true">
+                                    @if (com.SafeVms != null)
+                                    {
+                                        @foreach (var safe in com.SafeVms)
+                                        {
+                                            <MudNavLink OnClick="@(() => SelectSafe(safe, com.Name))" Icon="@Icons.Material.Filled.HealthAndSafety" IconColor="Color.Success">@safe?.Title</MudNavLink>
+                                        }
+                                    }
+                                </MudNavGroup>
+                            }
+                        }
+                        else
+                        {
+                            <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                        }
+
+                        @if (showLeaveAlert)
+                        {
+                            <MudAlert Severity="Severity.Info" ShowCloseIcon CloseIconClicked="CloseMe">Владелец сейфа должен вас пригласить через кнопку "Управление доступом"</MudAlert>
+                        }
+                    </MudNavMenu>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudPaper Class="d-flex align-right justify-right mud-width-full py-8">
+            <AuthorizeView>
+                <Authorized>
+                    <MudList Clickable="true">
+                        @if (currentSafeId != Guid.Empty)
+                        {
+                            <MudNavLink OnClick="@((e) => OpenRightsMangerPage(currentSafeId))" Icon="@Icons.Material.Filled.LockOpen" IconColor="Color.Success">
+                                Управление доступом
+                            </MudNavLink>
+                            <MudNavLink OnClick="@((e) => OpenPwCreator())" Icon="@Icons.Material.Filled.AddCircleOutline" IconColor="Color.Success">
+                                Создать пароль
+                            </MudNavLink>
+                            <MudButton OnClick="@(() => GetConnectionString(currentSafeId))" Size="Size.Small" Variant="Variant.Text">Строка подключения к тг боту</MudButton>
+                            <MudDialog @bind-IsVisible="conStringVisible">
+                                <TitleContent>
+                                    <MudText Typo="Typo.h6">
+                                        <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> Строка подключения
+                                    </MudText>
+                                </TitleContent>
+                                <DialogContent>
+                                    <p>@(botConnectionString?? "Ошибка")</p>
+                                </DialogContent>
+                                <DialogActions>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => conStringVisible=false)" Class="px-10">Close</MudButton>
+                                </DialogActions>
+                            </MudDialog>
+                        }
+                        @foreach (var pas in passwords)
+                        {
+                            <MudListItem @onclick="@(() => LoadPwDetail(pas.Id))">
+                                <MudText Typo="Typo.h6">
+                                    <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Key"></MudIcon>
+                                    @pas.Title
+                                </MudText>
+                                @foreach (var mtag in pas.Tags)
+                                {
+                                    <MudChip OnClick="@(() => {return;})" Color="Color.Default">@mtag.Title</MudChip>
+                                }
+                            </MudListItem>
+                            <MudDivider/>
+                        }
+                    </MudList>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <AuthorizeView>
+            <Authorized>
+                <MudCard Outlined="false" Class="d-flex align-left  mud-width-full py-8">
+                    @if(isLoadPwDetail != null && isLoadPwDetail == true){
+                        <MudProgressCircular Class="ms-5" Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                    }
+                    @if(isLoadPwDetail == false && pwDetial != null)
+                    {
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudIconButton Icon="@PasswordInputIcon" OnClick="HidenPw" Color="Color.Primary" />
+                                <MudToggleIconButton @onclick="@EnabledIsEditing" @bind-Toggled="@isEditing"
+                                                     Icon="@Icons.Material.Filled.EditOff" Color="@Color.Error" Title="Off"
+                                                     ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Success" ToggledTitle="On" />
+                                <span>Режим редактирования: @(isEditing ? "On" : "Off")</span>
+                                <MudIconButton Icon="@Icons.Material.Filled.History" Color="Color.Primary" Class="ms-4"/>
+                                <MudIconButton Disabled="@(!isEditing || pwDetial.IsDeleted)" OnClick="@(() => pwDetial.IsDeleted = !pwDetial.IsDeleted)"  Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Class="ms-4"/>
+                            </MudItem>
+                            <MudItem xs="12" Class="ms-5 ps-5">
+                                <MudTextField @bind-Value="@pwDetial.Title" Label="Название" ReadOnly="@(!isEditing)"/>
+                                <MudTextField @bind-Value="@pwDetial.Login"
+                                              Label="Логин"
+                                              Variant="Variant.Text"
+                                              InputType="@PasswordInput" ReadOnly="@(!isEditing)"/>
+                                <MudTextField @bind-Value="@pwDetial.Pw"
+                                              Label="Пароль"
+                                              Variant="Variant.Text"
+                                              InputType="@PasswordInput" ReadOnly="@(!isEditing)" />
+                                <MudTextField @bind-Value="@pwDetial.Note" Label="Заметка" ReadOnly="@(!isEditing)"/>
+                                <MudTextField @bind-Value="@pwDetial.UseInUtl" Label="Для ресурса" ReadOnly="@(!isEditing)"/>
+
+                                @if (pwDetial.IsDeleted)
+                                {
+                                    <MudButton OnClick="SendChangedPw" Disabled="@(!isEditing)" Variant="Variant.Text" Color="Color.Error">Удалить запись</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton OnClick="SendChangedPw" Disabled="@(!isEditing)" Variant="Variant.Text" Color="Color.Success">Сохранить изминения</MudButton>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    }
+                </MudCard>
+            </Authorized>
+            <NotAuthorized>
+                <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private string botConnectionString = null!;
+    private Guid currentSafeId;
+    private bool? isLoadPwDetail;
+    private string currentSafeName = string.Empty;
+    private string currentComName = string.Empty;
+    private RightEnumVm currentRight;
+    private List<PasswordVm> passwords = new();
+    private PasswordDetailVm pwDetial;
+    private bool isEditing { get; set; } = false;
+    private bool conStringVisible { get; set; } = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
+        var authenticated = await provider.GetAuthenticationStateAsync();
+        bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
+        if ((isAuthenticated is not null) && isAuthenticated == true)
+        {
+            //await HubClient.StartAsync();
+            await ApiService.LoadOwnerCom();
+            await ApiService.LoadLinkedCom();
+            HubClient.OnCompanyUpdated += HandleCompanyUpdated;
+            HubClient.OnSafeUsersUpdated += HandleCompanyUpdated;
+            HubClient.OnSafeUsersUpdated += HandlePasswordUpdated;
+            HubClient.OnSafeUsersUpdated += HandlePasswordDetailUpdated;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleCompanyUpdated()
+    {
+        // Обновление списка компаний при получении обновлений
+        InvokeAsync(async () =>
+        {
+            await ApiService.LoadOwnerCom();
+            await ApiService.LoadLinkedCom();
+            StateHasChanged();
+        });
+    }
+
+    private void HandlePasswordUpdated()
+    {
+        // Обновление списка паролей при получении обновлений
+        InvokeAsync(async () =>
+        {
+            bool isSuccessful = await ApiService.LoadLinkedPasswords(currentSafeId);
+            if (isSuccessful)
+            {
+                passwords = ApiService.Passwords;
+            }
+            else
+            {
+                Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+                passwords = new();
+            }
+            StateHasChanged();
+        });
+    }
+
+    private void HandlePasswordDetailUpdated()
+    {
+        // Обновление информации о пароле при получении обновлений
+        InvokeAsync(async () =>
+        {
+            await LoadPwDetail(currentSafeId);
+            StateHasChanged();
+        });
+    }
+
+    async Task GetConnectionString(Guid safeId)
+    {
+        conStringVisible = true;
+        botConnectionString = await ApiService.LoadConnectionString(safeId);
+        StateHasChanged();
+    }
+
+    async Task SendChangedPw()
+    {
+        var response = await ApiService.PostDataAsync<PasswordDetailVm>("api/Password/Edit", pwDetial);
+        if(response == true)
+        {
+            isEditing = false;
+            Snackbar.Add("Успешно", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+    }
+
+
+    DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+    async Task CreateSafe(Guid comId, string comName)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("comId", comId);
+        parameters.Add("comName", comName);
+
+        var dialog = await DialogService.ShowAsync<CreateSafe>("Создать сейф", parameters, maxWidth);
+    }
+
+    async Task OpenPwCreator()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("SafeId", currentSafeId);
+
+        var dialog = await DialogService.ShowAsync<CreatePassword>("Создать пароль", parameters, maxWidth);
+    }
+
+    async Task LoadPwDetail(Guid id)
+    {
+        if (isShowPw) { HidenPw();}
+        if (isEditing) { EnabledIsEditing();}
+        isLoadPwDetail = true;
+        StateHasChanged();
+        var response = await ApiService.LoadPasswordDetail(id);
+        if(response == null)
+        {
+            pwDetial = ApiService.PasswordDetail;
+            isLoadPwDetail = false;
+        }
+        else
+        {
+            pwDetial = new();
+            Snackbar.Add(response, Severity.Warning);
+        }
+        StateHasChanged();
+    }
+
+    async Task SelectSafe(SafeVm selectedSafe, string comName)
+    {
+        var provider = (CustomAuthStateProvider)AuthenticationStateProvider;
+        var authenticated = await provider.GetAuthenticationStateAsync();
+        bool? isAuthenticated = authenticated.User.Identity?.IsAuthenticated;
+        if ((isAuthenticated is not null) && isAuthenticated == true)
+        {
+            currentSafeId = selectedSafe.Id;
+            currentSafeName = selectedSafe.Title;
+            currentComName = comName;
+            currentRight = selectedSafe.RightInThisSafe;
+
+            bool res = await ApiService.LoadLinkedPasswords(selectedSafe.Id);
+            if(res)
+            {
+                passwords = ApiService.Passwords;
+            }
+            else
+            {
+                currentSafeId = Guid.Empty;
+                currentSafeName = string.Empty;
+                passwords = new();
+                Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+            }
+            StateHasChanged();
+            HubClient.OnPassworUpdated += HandlePasswordUpdated;
+        }
+    }
+
+
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    bool isShowPw;
+    InputType PasswordInput = InputType.Password;
+    void HidenPw()
+    {
+        @if (isShowPw)
+        {
+            isShowPw = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShowPw = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    void EnabledIsEditing()
+    {
+        @if (isEditing)
+        {
+            isEditing = false;
+            //post query wtih pwId for lock this pw, userName
+        }
+        else
+        {
+            isEditing = true;
+            //post query with pwId for unlock this pw
+        }
+    }
+
+
+    bool showLeaveAlert = true;
+    private void CloseMe()
+    {
+        showLeaveAlert = false;
+    }
+
+    void OpenRightsMangerPage(Guid safeId)
+    {
+        ApiService.NavigateTo($"/rights/{currentSafeName}/{safeId}");
+    }
+}

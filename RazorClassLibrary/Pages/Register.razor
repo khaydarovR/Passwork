@@ -1,0 +1,88 @@
+﻿@page "/register"
+@inject AuthenticationManager AuthenticationManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Toast.Services;
+@using static Passwork.ClientModule.Utils.ErrorEnum;
+
+
+<MudPaper Class="mt-5">
+    <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        <MudGrid>
+            <MudItem xs="12" sm="7">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Email" Class="mt-3"
+                        @bind-Value="model.Email" For="@(() => model.Email)" />
+                        <MudTextField Label="Password" HelperText="Choose a strong password" Class="mt-3"
+                        @bind-Value="model.Password" For="@(() => model.Password)" InputType="InputType.Password" />
+                        <MudTextField Label="Password" HelperText="Repeat the password" Class="mt-3"
+                        @bind-Value="model.Password2" For="@(() => model.Password2)" InputType="InputType.Password" />
+                        <MudTextField Label="Мастер пароль" HelperText="Исполльзуеться в качестве ключа для шифрования ваших данных"
+                                      Class="mt-3" @bind-Value="model.MasterPassword" For="@(() => model.MasterPassword)"/>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <ButtonWait @bind-IsLoad=@isLoad>Регистрация</ButtonWait>
+                    </MudCardActions>
+                    @if (isLoad)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                    }
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="5">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">Validation Summary</MudText>
+                    @if (success)
+                    {
+                        <MudText Color="Color.Success">Success</MudText>
+                    }
+                    else
+                    {
+                        <MudText Color="@Color.Error">
+                            <ValidationSummary />
+                        </MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Fill out the form correctly to see the success message.
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</MudPaper>
+@code {
+    UserRegisterDto model = new UserRegisterDto();
+    bool success;
+    bool isLoad = false;
+
+    private void OnValidSubmit(EditContext context)
+    {
+        HandleRegister();
+    }
+
+
+    private async void HandleRegister()
+    {
+        isLoad = true;
+        StateHasChanged();
+        if (await AuthenticationManager.Register(model))
+        {
+            success = true;
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            //ToastService.ShowError(AuthenticationManager.ErrorMessage, ErrorType.RegistrationError.ToString());
+            AuthenticationManager.ErrorMessage = string.Empty;
+            isLoad = false;
+        }
+        StateHasChanged();
+    }
+
+}

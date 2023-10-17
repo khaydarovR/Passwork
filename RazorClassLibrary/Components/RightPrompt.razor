@@ -1,0 +1,55 @@
+﻿@using Passwork.Shared.ViewModels;
+
+<MudDialog>
+    <DialogContent>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Отсутствует</MudText>
+                <MudText Typo="Typo.body2">У данного пользователя не будет не каких прав, но он будет видеть что прикреплен к соответсвущему сейфу</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Смотреть</MudText>
+                <MudText Typo="Typo.body2">Пользователь сможет видет какие пароли есть в сейфе (только названия)</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Читать</MudText>
+                <MudText Typo="Typo.body2">Пользователь сможет видет все записи в сейфе, включая их значения (логин\пароль)</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Записывать</MudText>
+                <MudText Typo="Typo.body2">Сможет добавлять\изменять пароли</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Приглашать</MudText>
+                <MudText Typo="Typo.body2">Сможет приглашать новых пользователей в сейф и менять права в пределах своего уровня доступа</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Удалять</MudText>
+                <MudText Typo="Typo.body2">Возможность мягкого удаления паролей</MudText>
+            </MudCardContent>
+        </MudCard>
+        <MudCard>
+            <MudCardContent>
+                <MudText>@RightEnumVm.Владелец</MudText>
+                <MudText Typo="Typo.body2">Непосредственный создатель сейфа, может быть только один для каждого сейфа и не может меняться.</MudText>
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Cancel()">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+}

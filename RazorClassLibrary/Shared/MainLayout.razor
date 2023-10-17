@@ -1,0 +1,88 @@
+﻿@inherits LayoutComponentBase
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider CustomAuthStateProvider
+@inject HttpClient HttpClient
+@inject AuthenticationManager AuthManager
+@inject TokenService TokenService
+
+@using RazorClassLibrary.Components;
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Dense="true" Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" @onclick="@ToggleDrawer" />
+        <MudSpacer />
+        <AuthorizeView>
+            <Authorized>
+                <MudText>@context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)!.Value</MudText>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton OnClick="@((e) => OpenDialog(maxWidth))" Variant="Variant.Filled" Color="Color.Info">
+                    Войти
+                </MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Key" Color="Color.Inherit" />
+            </NotAuthorized>
+        </AuthorizeView>
+        
+    </MudAppBar>
+    <MudDrawer @bind-Open="@open" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">ComPas</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All" Href="/">Главная</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Add" OnClick="@((e) => CreateComDialog(maxWidth))">Новая компания</MudNavLink>
+            <MudNavLink Href="/counter">Коунтер</MudNavLink>
+        </MudNavMenu>
+        <AuthorizeView>
+            <Authorized>
+                <MudPaper Class="d-flex align-end flex-grow-1 gap-4" Elevation="0">
+                    <MudButton Class="ma-4 mb-5" Variant="Variant.Text" @onclick="Logout" Color="Color.Error">Выйти</MudButton>
+                </MudPaper>
+            </Authorized>
+        </AuthorizeView>
+    </MudDrawer>
+    <MudMainContent Class="pt-16 px-16">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+
+@code {
+    bool open = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        #warning Только для дебаг режима
+        AuthManager.Logout();
+        await CustomAuthStateProvider.GetAuthenticationStateAsync();
+        base.OnInitialized();
+    }
+
+    void ToggleDrawer()
+    {
+        open = !open;
+    }
+
+    DialogOptions maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private void OpenDialog(DialogOptions options)
+    {
+        DialogService.Show(typeof(Login), "Вход", options);
+    }
+
+    private void CreateComDialog(DialogOptions options)
+    {
+        DialogService.Show(typeof(CreateCom), "Создание новой компании", options);
+    }
+
+    async Task Logout()
+    {
+        await AuthManager.Logout();
+        Snackbar.Add("Вы вышли с аккаунта", Severity.Warning);
+    }
+}

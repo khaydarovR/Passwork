@@ -1,0 +1,61 @@
+﻿@inject ISnackbar Snackbar
+@inject ApiService ApiService
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1" />
+            Создание нового сейфа для @comName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+            <MudTextField @bind-Value="@model.Title" For="@(() => model.Title)" Label="Название" />
+            <MudTextField @bind-Value="@model.Description" For="@(() => model.Description)" Label="Описание" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Color="Color.Success">Создать</MudButton>
+    </DialogActions>
+</MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Guid comId { get; set; }
+    [Parameter] public string comName  { get; set; }
+
+    bool isLoad = false;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private SafeCreateDto model = new();
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (context.Validate())
+        {
+            isLoad = true;
+            StateHasChanged();
+
+            model.CompanyId = comId;
+            var isDataPosted = await ApiService.PostDataAsync("/api/Safe/Create", model);
+            if (isDataPosted)
+            {
+                Snackbar.Add("Успешно создана", Severity.Success);
+                ApiService.NavigateTo("/");
+            }
+            else
+            {
+
+                isLoad = false;
+                Snackbar.Add("Ошибка", Severity.Error);
+            }
+
+            StateHasChanged();
+        }
+    }
+}

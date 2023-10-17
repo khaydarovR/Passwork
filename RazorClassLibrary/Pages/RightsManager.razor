@@ -1,0 +1,226 @@
+﻿@page "/rights/{SafeName}/{SafeId:guid}"
+@attribute [Authorize]
+
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject ApiService ApiService
+@inject HubClient HubClient
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Rights</PageTitle>
+
+<MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+    <AuthorizeView>
+        <Authorized>
+            <MudGrid>
+                <MudItem xs="12" sm="5">
+                    <MudText Typo="Typo.h6" Class="ms-1">Пользователи компани</MudText>
+                    <MudDivider />
+                    <MudTable Class="mt-5" Items="@companyUsers" Dense="false" Hover="true" Bordered="false" Striped="false"
+                              Filter="new Func<ComUserVm,bool>(FilterComUsers)" @bind-SelectedItem="selectedComUser">
+
+                        <ToolBarContent>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="globalSearch" Placeholder="Поиск" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="ms-1"></MudTextField>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => TrySendInvite(globalSearch))">Глобальный поиск</MudButton>
+                        </ToolBarContent>
+                        <RowTemplate Context="table">
+                            <MudTd DataLabel="Email">@table.Email</MudTd>
+                            <MudTd DataLabel="Btn">
+                                <MudChip OnClick="@(() => TrySendInvite(table.Email))" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Warning">Добавить</MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager HideRowsPerPage InfoFormat="" />
+                        </PagerContent>
+                    </MudTable>
+
+                </MudItem>
+                
+                <MudItem xs="12" sm="7">
+                        @if(selectedSafeUsers.Count > 0)
+                        {
+                            <MudButton Color="Color.Warning" @onclick="OpenRightEditor">Настроить права (@selectedSafeUsers.Count)</MudButton>
+                        }
+                        @if (selectedSafeUsers.Count == 0)
+                        {
+                            <MudButton Disabled Color="Color.Warning" @onclick="OpenRightEditor">Настроить права (@selectedSafeUsers.Count)</MudButton>
+                        }
+                    <MudSpacer/>
+                    <MudTable Class="mt-5" Items="@safeUsers" Dense="false" Hover="true" Bordered="false" Striped="false" 
+                        Filter="new Func<SafeUserVm,bool>(FilterSafeUser)" MultiSelection @bind-SelectedItems="selectedSafeUsers">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h4">Сейф - @SafeName</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="searchString" Placeholder="Поиск" Adornment="Adornment.Start" 
+                            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Id</MudTh>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Права<MudIconButton OnClick="OpenPrompt" Icon="@Icons.Material.Rounded.Info" Color="Color.Info"></MudIconButton></MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="table">
+                            <MudTd DataLabel="Nr">@(table.UserId.ToString()[..3])...@(table.UserId.ToString()[^3..])</MudTd>
+                            <MudTd DataLabel="Email">@table.Email</MudTd>
+                            <MudTd DataLabel="Rights">@table.Right.ToString()</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudItem>
+            </MudGrid>
+        </Authorized>
+        <NotAuthorized>
+            <MudText Typo="Typo.body2" Color="Color.Error" Class="px-4">Требуется авторизация</MudText>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudPaper>
+
+
+    @code {
+    [Parameter]
+    public Guid SafeId {get; set;}
+    [Parameter]
+    public string SafeName { get; set; }
+
+    private string searchString { get; set; } = string.Empty;
+    private string globalSearch { get; set; } = string.Empty;
+
+    private List<SafeUserVm> safeUsers = new();
+    private HashSet<SafeUserVm> selectedSafeUsers = new();
+
+    private List<ComUserVm> companyUsers;
+    private ComUserVm selectedComUser = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FindLinkedUsers();
+        await FindCompanyUsers();
+        HubClient.OnSafeUsersUpdated += HandleSafeUsersUpdated;
+        HubClient.OnCompanyUpdated += HandleSafeUsersUpdated;
+        StateHasChanged();
+    }
+
+    private void HandleSafeUsersUpdated()
+    {
+        // Обновление списка пользователей в сейфе или их прав при получении сигнала от сервера
+        InvokeAsync(async () =>
+        {
+            await FindLinkedUsers();
+            await FindCompanyUsers();
+        });
+        StateHasChanged();
+    }
+
+    async Task OpenRightEditor()
+    {
+        var maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var parameters = new DialogParameters();
+        parameters.Add("SafeUsers", selectedSafeUsers);
+        parameters.Add("SafeId", SafeId);
+        globalSearch = "";
+        searchString = "";
+        var dialog = await DialogService.ShowAsync<EditRight>("Изминение прав пользователей", parameters, maxWidth);
+        selectedSafeUsers = new();
+        StateHasChanged();
+    }
+
+    async Task OpenPrompt()
+    {
+        var maxWidth = new DialogOptions() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<RightPrompt>("Описание уровней доступа", maxWidth);
+    }
+
+    async Task FindLinkedUsers()
+    {
+        var response = await ApiService.LoadSafeUsers(SafeId);
+        if (response == null)
+        {
+            safeUsers = ApiService.SafeUsers;
+        }
+        else
+        {
+            Snackbar.Add(response, Severity.Error);
+        }
+        StateHasChanged();
+    }
+
+    async Task FindCompanyUsers()
+    {
+        var responseMessage = await ApiService.LoadComUsers(SafeId);
+        if (responseMessage == null)
+        {
+            companyUsers = ApiService.ComUsers;
+        }
+        else
+        {
+            Snackbar.Add(responseMessage, Severity.Error);
+        }
+    }
+
+    async Task TrySendInvite(string email)
+    {
+        var model = new AddUserToSafeDto()
+            {
+                Right = RightEnumVm.Смотреть,
+                UserEmail = email,
+                SafeId = SafeId
+            };
+        var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
+        if(response == false)
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("В сейф добавлен новый пользователь", Severity.Success);
+        }
+    }
+
+    async Task AddUserFromSafe(string email)
+    {
+        var model = new AddUserToSafeDto()
+            {
+                Right = RightEnumVm.Смотреть,
+                UserEmail = email,
+                SafeId = SafeId
+            };
+        var response = await ApiService.PostDataAsync<AddUserToSafeDto>("api/Safe/AddUser", model);
+        if (response == false)
+        {
+            Snackbar.Add(ApiService.CurrentErrorMessage.Message, Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("В сейф добавлен новый пользователь", Severity.Success);
+        }
+    }
+
+    private bool FilterSafeUser(SafeUserVm element) => FilterFuncSafeUsers(element, searchString);
+    private bool FilterComUsers(ComUserVm element) => FilterFuncComUsers(element, globalSearch);
+    private bool FilterFuncSafeUsers(SafeUserVm element, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+            return true;
+        if (element.Email.Contains(search, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Right.ToString().Contains(search, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{element.Email} {element.Right.ToString()}".Contains(search))
+            return true;
+        return false;
+    }
+    private bool FilterFuncComUsers(ComUserVm element, string globalsearch)
+    {
+        if (string.IsNullOrWhiteSpace(globalsearch))
+            return true;
+        if (element.Email.Contains(globalsearch, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

@@ -1,0 +1,89 @@
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+@inject ApiService ApiService
+
+@attribute [Authorize]
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Forms;
+@using MudBlazor;
+@using MudBlazorFix;
+@using Passwork.ClientModule.Services;
+@using Passwork.Shared.Dto;
+@using System.Net.Http.Json;
+@using System.Net;
+@using Passwork.ClientModule;
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="@OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField Label="Название" Class="mt-3"
+                                          @bind-Value="model.Name" For="@(() => model.Name)" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <ButtonWait @bind-IsLoad="@isLoad">
+                                Создать
+                            </ButtonWait>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                }
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    CompanyCreateDto model = new CompanyCreateDto();
+    bool success;
+    bool isLoad = false;
+    string errorMessage = null;
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (context.Validate())
+        {
+            isLoad = true;
+            success = true;
+            StateHasChanged();
+
+            var isDataPosted = await ApiService.PostDataAsync("/api/Company/Create", model);
+            if (isDataPosted)
+            {
+                Snackbar.Add("Успешно создана", Severity.Success);
+                ApiService.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Ошибка";
+                isLoad = false;
+                Snackbar.Add("Ошибка", Severity.Error);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    void NavigateToRegisterPage()
+    {
+        NavigationManager.NavigateTo("/register");
+    }
+}
